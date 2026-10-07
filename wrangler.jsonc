@@ -1,0 +1,24 @@
+{
+  // Cloudflare Workers 설정 파일입니다. 자세한 배포 방법은 README.md를 참고하세요.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mnm",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  // 배포 전에 화면(dist)을 먼저 빌드합니다. (Cloudflare 자동 배포에서도 동작)
+  "build": { "command": "npm run build" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/files/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mnm-db",
+      "database_id": "d34cd70d-0534-4698-a5bc-475c6ff6c94f"
+    }
+  ]
+  // 이미지를 R2에 저장하고 싶다면 아래 주석을 풀어주세요. (없으면 D1에 저장됩니다)
+  // ,"r2_buckets": [{ "binding": "BUCKET", "bucket_name": "our-diary-files" }]
+}
