@@ -60,6 +60,42 @@ function svgPattern(inner, size) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 0 0 / ${size * 1.4}px ${size * 1.4}px`
 }
 
+// 기본으로 고를 수 있는 커서 모양 (포인트 색으로 칠해져요)
+const CURSOR_SHAPES = {
+  heart: 'M12 21s-7-4.6-9.3-9C1 8.3 3.4 5 6.6 5c2 0 3.3 1.1 4.1 2.3h.6C12.1 6.1 13.4 5 15.4 5c3.2 0 5.6 3.3 3.9 7-2.3 4.4-9.3 9-9.3 9Z',
+  star: 'M12 2.5l2.8 6.2 6.7.6-5.1 4.5 1.5 6.6L12 17l-5.9 3.4 1.5-6.6L2.5 9.3l6.7-.6Z',
+  paw: 'M7 8.5a2 2.6 0 1 1 0-.1Zm10 0a2 2.6 0 1 1 0-.1ZM3.6 13a1.8 2.3 0 1 1 0-.1Zm16.8 0a1.8 2.3 0 1 1 0-.1ZM12 12c3 0 6 3.6 6 6.2 0 2-1.7 2.8-3.2 2.8-1.2 0-1.9-.6-2.8-.6s-1.6.6-2.8.6C7.7 21 6 20.2 6 18.2 6 15.6 9 12 12 12Z',
+  sparkle: 'M12 1.5c.8 5.5 2.9 8 9.5 10.5-6.6 2.5-8.7 5-9.5 10.5-.8-5.5-2.9-8-9.5-10.5C9.1 9.5 11.2 7 12 1.5Z',
+}
+
+function shapeCursor(shape, color, size) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><path d="${CURSOR_SHAPES[shape]}" fill="${color}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`
+}
+
+function cursorCss(theme, pal) {
+  const q = (u) => `url("${String(u).replace(/"/g, '%22')}")`
+  const clickable = 'a, button, label, select, summary, [role="button"], [role="tab"], [role="radio"], input[type="checkbox"], input[type="range"], input[type="color"]'
+  if (CURSOR_SHAPES[theme.cursor]) {
+    const size = Math.max(16, Math.min(64, Number(theme.cursorSize) || 28))
+    const accent = /^#|^rgb/.test(pal.accent) ? pal.accent : '#3e91ff'
+    const normal = shapeCursor(theme.cursor, accent, size)
+    const hover = shapeCursor(theme.cursor, accent, Math.round(size * 1.25))
+    return `html, body { cursor: ${q(normal)} ${Math.round(size / 2)} ${Math.round(size / 2)}, auto; }
+      ${clickable} { cursor: ${q(hover)} ${Math.round(size * 0.62)} ${Math.round(size * 0.62)}, pointer; }`
+  }
+  if (theme.cursor === 'custom' && (theme.cursorImage || theme.cursorPointerImage)) {
+    let css = ''
+    if (theme.cursorImage) css += `html, body { cursor: ${q(theme.cursorImage)} ${Number(theme.cursorX) || 0} ${Number(theme.cursorY) || 0}, auto; }`
+    const pointer = theme.cursorPointerImage || theme.cursorImage
+    const px = theme.cursorPointerImage ? theme.cursorPointerX : theme.cursorX
+    const py = theme.cursorPointerImage ? theme.cursorPointerY : theme.cursorY
+    css += `\n${clickable} { cursor: ${q(pointer)} ${Number(px) || 0} ${Number(py) || 0}, pointer; }`
+    return css
+  }
+  return ''
+}
+
 function pageBackground(theme, pal, mode) {
   switch (theme.bgType) {
     case 'gradient':
@@ -142,7 +178,9 @@ export function applyTheme(theme, mode) {
   const fontFace = theme.customFontUrl
     ? `@font-face { font-family: 'OD Custom Font'; src: url("${theme.customFontUrl.replace(/"/g, '%22')}"); font-display: swap; }`
     : ''
-  styleTag('od-theme-extra').textContent = `${fontFace}\n${bgCss}`
+  // 글을 쓰는 칸에서는 글자 커서(I)를 그대로 둡니다.
+  const textCursor = theme.cursor !== 'default' ? 'input:not([type=checkbox]):not([type=range]):not([type=color]), textarea, [contenteditable="true"] { cursor: text; }' : ''
+  styleTag('od-theme-extra').textContent = `${fontFace}\n${bgCss}\n${cursorCss(theme, pal)}\n${textCursor}`
   styleTag('od-custom-css').textContent = theme.customCss || ''
 
   const meta = document.querySelector('meta[name="theme-color"]') || document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'theme-color' }))

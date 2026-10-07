@@ -9,6 +9,7 @@ import Archive from './pages/Archive.jsx'
 import PostView from './pages/PostView.jsx'
 import Write from './pages/Write.jsx'
 import Admin from './admin/Admin.jsx'
+import BannersPage from './pages/Banners.jsx'
 import { CalendarPage, GuestbookPage, LoginPage, NotFound, TagsPage } from './pages/Misc.jsx'
 
 function Router() {
@@ -61,6 +62,9 @@ function Router() {
       break
     case 'calendar':
       page = <CalendarPage />
+      break
+    case 'banners':
+      page = <BannersPage />
       break
     case 'login':
       page = <LoginPage />

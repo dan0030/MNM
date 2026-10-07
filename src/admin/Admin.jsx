@@ -7,13 +7,14 @@ import { DEFAULT_THEME, LIST_STYLES, PRESETS, deepMerge, resolveTheme } from '..
 import { LargeTitle } from '../components/Shell.jsx'
 import { Fields, IconInput, ColorInput } from '../components/Fields.jsx'
 import { Empty, Paging, Segmented, Spinner } from '../components/ui.jsx'
-import { DESIGN_SECTIONS, PALETTE_KEYS, SITE_FIELDS } from './schemas.js'
+import { BANNER_FIELDS, DESIGN_SECTIONS, PALETTE_KEYS, SITE_FIELDS } from './schemas.js'
 
 const TABS = [
   { key: 'site', label: '사이트', icon: 'fa-solid fa-house-chimney-user' },
   { key: 'design', label: '디자인', icon: 'fa-solid fa-palette' },
   { key: 'home', label: '홈 화면', icon: 'fa-solid fa-table-cells-large' },
   { key: 'categories', label: '카테고리', icon: 'fa-solid fa-folder-tree' },
+  { key: 'banners', label: '배너 게시판', icon: 'fa-solid fa-flag' },
   { key: 'posts', label: '글 관리', icon: 'fa-regular fa-file-lines' },
   { key: 'comments', label: '댓글 · 방명록', icon: 'fa-regular fa-comments' },
   { key: 'backup', label: '백업 · 파일', icon: 'fa-solid fa-box-archive' },
@@ -76,6 +77,7 @@ export default function Admin({ tab }) {
     <div className="admin">
       <LargeTitle title={current.label} eyebrow={<a href="/admin" className="back-link"><i className="fa-solid fa-chevron-left" /> 관리</a>} />
       {tab === 'site' && <SiteTab />}
+      {tab === 'banners' && <SiteTab fields={BANNER_FIELDS} />}
       {tab === 'design' && <DesignTab />}
       {tab === 'home' && <HomeTab />}
       {tab === 'categories' && <CategoriesTab />}
@@ -106,7 +108,7 @@ function SaveBar({ dirty, busy, onSave, onReset, label = '저장' }) {
 
 /* ------------------------------------------------------------------ */
 
-function SiteTab() {
+function SiteTab({ fields = SITE_FIELDS }) {
   const app = useApp()
   const [draft, setDraft] = useState(app.site)
   const [busy, setBusy] = useState(false)
@@ -127,7 +129,7 @@ function SiteTab() {
   return (
     <>
       <div className="card padded">
-        <Fields fields={SITE_FIELDS} value={draft} onChange={setDraft} />
+        <Fields fields={fields} value={draft} onChange={setDraft} />
       </div>
       <SaveBar dirty={dirty} busy={busy} onSave={save} onReset={() => setDraft(app.site)} />
     </>

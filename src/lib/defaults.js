@@ -20,7 +20,10 @@ export const DEFAULT_SITE = {
   ],
   bgm: [],
   bgmLabel: 'Now playing',
-  menu: { archive: true, calendar: true, notice: true, guestbook: true, tags: true },
+  menu: { archive: true, calendar: true, notice: true, guestbook: true, tags: true, banners: true },
+  banners: [],
+  myBanner: { image: '', url: '', alt: '', note: '' },
+  bannerIntro: '함께해 주시는 분들의 배너예요.',
   bottomNav: [
     { label: '홈', icon: 'fa-solid fa-house', href: '/' },
     { label: '기록', icon: 'fa-solid fa-book-open', href: '/archive' },
@@ -30,7 +33,7 @@ export const DEFAULT_SITE = {
   features: { comments: true, guestbook: true, reactions: true, showViews: false, nameSwap: true },
   reactions: ['❤️', '🥹', '😭', '✨', '👏'],
   postsPerPage: 12,
-  footer: '',
+  footer: 'ODAN DREAMPAIR',
   guestbookIntro: '다녀간 흔적을 남겨주세요.',
 }
 
@@ -161,6 +164,16 @@ export const DEFAULT_THEME = {
   animations: true,
   hoverLift: true,
   iconStyle: 'solid',
+
+  // 마우스 커서
+  cursor: 'default', // default | heart | star | paw | sparkle | custom
+  cursorImage: '',
+  cursorX: 0,
+  cursorY: 0,
+  cursorPointerImage: '',
+  cursorPointerX: 0,
+  cursorPointerY: 0,
+  cursorSize: 28,
 
   customCss: '',
 }

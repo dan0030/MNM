@@ -28,6 +28,7 @@ export const SITE_FIELDS = [
   { key: 'menu.guestbook', label: '방명록 아이콘', type: 'toggle' },
   { key: 'menu.tags', label: '태그 아이콘', type: 'toggle' },
   { key: 'menu.calendar', label: '캘린더 아이콘', type: 'toggle' },
+  { key: 'menu.banners', label: '배너 아이콘', type: 'toggle' },
   {
     key: 'bottomNav',
     label: '하단 탭 메뉴 (디자인 > 배치에서 하단 탭을 켜면 보여요)',
@@ -249,6 +250,49 @@ export const DESIGN_SECTIONS = [
     ],
   },
   {
+    key: 'cursor',
+    label: '커서',
+    icon: 'fa-solid fa-arrow-pointer',
+    fields: [
+      {
+        key: 'cursor',
+        label: '마우스 커서',
+        type: 'select',
+        options: [
+          { value: 'default', label: '기본 (컴퓨터 설정)' },
+          { value: 'heart', label: '하트' },
+          { value: 'star', label: '별' },
+          { value: 'paw', label: '발바닥' },
+          { value: 'sparkle', label: '반짝이' },
+          { value: 'custom', label: '직접 올린 이미지' },
+        ],
+        help: '모양 커서는 포인트 색으로 칠해지고, 링크 위에서는 살짝 커져요. 휴대폰에서는 보이지 않아요.',
+      },
+      { key: 'cursorSize', label: '커서 크기', type: 'range', min: 16, max: 48, unit: 'px', show: (t) => !['default', 'custom'].includes(t.cursor) },
+      {
+        key: 'cursorImage',
+        label: '기본 커서 이미지',
+        type: 'image',
+        accept: 'image/png,image/gif,image/svg+xml,.cur,.ico',
+        uploadOptions: { maxSize: 32, keepPng: true },
+        help: 'PNG를 올리면 32px로 자동으로 줄여요. 32×32 이하 투명 배경 PNG나 .cur 파일이 가장 잘 보여요.',
+        show: (t) => t.cursor === 'custom',
+      },
+      { key: 'cursorX', label: '클릭 지점 X (왼쪽에서 px)', type: 'range', min: 0, max: 32, show: (t) => t.cursor === 'custom' },
+      { key: 'cursorY', label: '클릭 지점 Y (위에서 px)', type: 'range', min: 0, max: 32, show: (t) => t.cursor === 'custom' },
+      {
+        key: 'cursorPointerImage',
+        label: '링크 위 커서 이미지 (비우면 기본 커서와 같게)',
+        type: 'image',
+        accept: 'image/png,image/gif,image/svg+xml,.cur,.ico',
+        uploadOptions: { maxSize: 32, keepPng: true },
+        show: (t) => t.cursor === 'custom',
+      },
+      { key: 'cursorPointerX', label: '링크 커서 클릭 지점 X', type: 'range', min: 0, max: 32, show: (t) => t.cursor === 'custom' && t.cursorPointerImage },
+      { key: 'cursorPointerY', label: '링크 커서 클릭 지점 Y', type: 'range', min: 0, max: 32, show: (t) => t.cursor === 'custom' && t.cursorPointerImage },
+    ],
+  },
+  {
     key: 'css',
     label: '사용자 CSS',
     icon: 'fa-solid fa-code',
@@ -260,6 +304,29 @@ export const DESIGN_SECTIONS = [
         rows: 14,
         help: '가장 마지막에 적용돼서 무엇이든 덮어쓸 수 있어요. 예) .widget { border: 2px dashed var(--accent); }  ·  주요 변수: --accent, --bg, --surface, --text, --radius',
       },
+    ],
+  },
+]
+
+export const BANNER_FIELDS = [
+  { type: 'heading', label: '배너 게시판', help: '메뉴의 "배너"에서 보이는 페이지예요.' },
+  { key: 'bannerIntro', label: '안내 문구' },
+  { type: 'heading', label: '우리 배너', help: '다른 사람이 퍼갈 수 있게 HTML 코드와 함께 보여줘요.' },
+  { key: 'myBanner.image', label: '배너 이미지', type: 'image', uploadOptions: { maxSize: 600, keepPng: true }, help: '흔히 200×40, 88×31 같은 작은 크기를 써요. GIF 움짤도 그대로 올라가요.' },
+  { key: 'myBanner.url', label: '연결 주소 (비우면 이 사이트)' },
+  { key: 'myBanner.alt', label: '대체 문구' },
+  { key: 'myBanner.note', label: '안내 (예: 직링크 금지, 퍼가실 땐 방명록에 알려주세요)', type: 'textarea', rows: 2 },
+  { type: 'heading', label: '링크 배너' },
+  {
+    key: 'banners',
+    label: '배너 목록',
+    type: 'list',
+    itemLabel: '배너',
+    itemFields: [
+      { key: 'image', label: '배너 이미지', type: 'image', uploadOptions: { maxSize: 600, keepPng: true } },
+      { key: 'name', label: '이름' },
+      { key: 'url', label: '연결 주소' },
+      { key: 'desc', label: '한 줄 설명' },
     ],
   },
 ]

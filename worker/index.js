@@ -740,7 +740,7 @@ async function addComment(db, admin, body) {
 /* 파일 업로드                                                          */
 /* ------------------------------------------------------------------ */
 
-const ALLOWED_MIME = /^(image\/(png|jpe?g|gif|webp|avif|svg\+xml)|audio\/(mpeg|mp4|ogg|wav|webm)|video\/(mp4|webm)|font\/(woff2?|ttf|otf)|application\/(font-woff2?|x-font-ttf))$/
+const ALLOWED_MIME = /^(image\/(png|jpe?g|gif|webp|avif|svg\+xml|x-icon|vnd\.microsoft\.icon)|audio\/(mpeg|mp4|ogg|wav|webm)|video\/(mp4|webm)|font\/(woff2?|ttf|otf)|application\/(font-woff2?|x-font-ttf))$/
 
 async function uploadFile(request, env) {
   const form = await request.formData()
@@ -750,6 +750,7 @@ async function uploadFile(request, env) {
   const FONT_EXT = { woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf' }
   let mime = file.type || 'application/octet-stream'
   if (FONT_EXT[ext] && !mime.startsWith('font/')) mime = FONT_EXT[ext]
+  if ((ext === 'cur' || ext === 'ico') && !mime.startsWith('image/')) mime = 'image/x-icon'
   if (!ALLOWED_MIME.test(mime)) throw new HttpError(400, `올릴 수 없는 파일 형식이에요. (${mime})`)
   const limit = env.BUCKET ? R2_FILE_LIMIT : D1_FILE_LIMIT
   if (file.size > limit) throw new HttpError(413, `파일이 너무 커요. (최대 ${(limit / 1024 / 1024).toFixed(1)}MB)`)

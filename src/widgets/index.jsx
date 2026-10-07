@@ -6,6 +6,7 @@ import { PostList } from '../components/PostList.jsx'
 import { Content } from '../components/Content.jsx'
 import { BgmCard } from '../components/Bgm.jsx'
 import { LIST_STYLES } from '../lib/defaults.js'
+import { BannerGrid } from '../pages/Banners.jsx'
 
 /* ------------------------------------------------------------------ */
 /* 공용 훅                                                              */
@@ -754,6 +755,21 @@ function StatsWidget({ config }) {
   )
 }
 
+function BannerBoardWidget({ config }) {
+  const { site } = useApp()
+  const banners = (site.banners || []).filter((b) => b.image || b.name).slice(0, Number(config.count) || 12)
+  return (
+    <>
+      <WidgetTitle config={config} fallback="배너" icon="fa-solid fa-flag">
+        <a className="widget-more" href="/banners">
+          전체 <i className="fa-solid fa-chevron-right" />
+        </a>
+      </WidgetTitle>
+      {banners.length ? <BannerGrid banners={banners} size="small" /> : <Placeholder icon="fa-solid fa-flag">관리 › 배너 게시판에서 배너를 등록해주세요</Placeholder>}
+    </>
+  )
+}
+
 function BgmWidget() {
   return <BgmCard compact />
 }
@@ -1110,6 +1126,15 @@ export const WIDGETS = {
     Component: StatsWidget,
     fields: [],
     defaults: {},
+  },
+  bannerboard: {
+    label: '배너 게시판',
+    icon: 'fa-solid fa-flag',
+    sizes: ['M', 'L'],
+    Component: BannerBoardWidget,
+    fields: [{ key: 'count', label: '최대 개수', type: 'number', min: 1, max: 60 }],
+    help: '배너는 관리 › 배너 게시판에서 등록해요.',
+    defaults: { title: '배너', count: 12 },
   },
   bgm: {
     label: 'BGM 플레이어',

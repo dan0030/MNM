@@ -148,56 +148,19 @@ function Drawer({ open, onClose }) {
     <aside ref={asideRef} className={`drawer ${open ? 'open' : ''}`} aria-label="메뉴">
       <div className="drawer-head">
         <span className="drawer-title">MENU</span>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="메뉴 닫기">
-          <i className="fa-solid fa-xmark" />
-        </button>
+        <div className="drawer-head-actions">
+          {app.theme.allowToggle !== false && (
+            <button type="button" className="icon-btn" onClick={app.toggleMode} aria-label={app.mode === 'dark' ? '라이트 모드로' : '다크 모드로'} title={app.mode === 'dark' ? '라이트 모드' : '다크 모드'}>
+              <i className={`fa-solid ${app.mode === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
+            </button>
+          )}
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="메뉴 닫기">
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </div>
       </div>
       <div className="drawer-scroll">
         <div className="drawer-section">
-          <div className="drawer-icons">
-            <a href="/" title="홈" aria-label="홈">
-              <i className="fa-solid fa-house" />
-            </a>
-            {site.menu.notice && (
-              <a href="/notice" title="공지사항" aria-label="공지사항">
-                <i className="fa-solid fa-bullhorn" />
-              </a>
-            )}
-            {site.menu.guestbook && site.features.guestbook !== false && (
-              <a href="/guestbook" title="방명록" aria-label="방명록">
-                <i className="fa-solid fa-comment-dots" />
-              </a>
-            )}
-            {site.menu.tags && (
-              <a href="/tags" title="태그" aria-label="태그">
-                <i className="fa-solid fa-hashtag" />
-              </a>
-            )}
-            {site.menu.calendar && (
-              <a href="/calendar" title="캘린더" aria-label="캘린더">
-                <i className="fa-regular fa-calendar" />
-              </a>
-            )}
-            {app.theme.allowToggle !== false && (
-              <button type="button" onClick={app.toggleMode} title="화면 모드" aria-label="화면 모드 바꾸기">
-                <i className={`fa-solid ${app.mode === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
-              </button>
-            )}
-            {app.admin ? (
-              <>
-                <a href="/admin" title="관리" aria-label="관리">
-                  <i className="fa-solid fa-gear" />
-                </a>
-                <button type="button" onClick={logout} title="로그아웃" aria-label="로그아웃">
-                  <i className="fa-solid fa-right-from-bracket" />
-                </button>
-              </>
-            ) : (
-              <a href="/login" title="로그인" aria-label="로그인">
-                <i className="fa-solid fa-right-to-bracket" />
-              </a>
-            )}
-          </div>
           <form
             className="search-field"
             onSubmit={(e) => {
@@ -208,6 +171,29 @@ function Drawer({ open, onClose }) {
             <i className="fa-solid fa-magnifying-glass" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색어 입력..." aria-label="검색어" />
           </form>
+        </div>
+
+        <div className="drawer-section">
+          <span className="section-label">MENU</span>
+          <nav className="drawer-tiles">
+            {[
+              { href: '/', icon: 'fa-solid fa-house', label: '홈', show: true },
+              { href: '/notice', icon: 'fa-solid fa-bullhorn', label: '공지', show: site.menu.notice },
+              { href: '/guestbook', icon: 'fa-solid fa-comment-dots', label: '방명록', show: site.menu.guestbook && site.features.guestbook !== false },
+              { href: '/calendar', icon: 'fa-regular fa-calendar', label: '캘린더', show: site.menu.calendar },
+              { href: '/tags', icon: 'fa-solid fa-hashtag', label: '태그', show: site.menu.tags },
+              { href: '/banners', icon: 'fa-solid fa-flag', label: '배너', show: site.menu.banners },
+            ]
+              .filter((t) => t.show)
+              .map((t) => (
+                <a key={t.href} href={t.href} className="drawer-tile">
+                  <span className="drawer-tile-icon">
+                    <i className={t.icon} />
+                  </span>
+                  <span>{t.label}</span>
+                </a>
+              ))}
+          </nav>
         </div>
 
         <div className="drawer-section">
@@ -281,6 +267,25 @@ function Drawer({ open, onClose }) {
         )}
       </div>
       <div className="drawer-foot">
+        <div className="drawer-account">
+          {app.admin ? (
+            <>
+              <a href="/write">
+                <i className="fa-solid fa-pen" /> 글쓰기
+              </a>
+              <a href="/admin">
+                <i className="fa-solid fa-gear" /> 관리
+              </a>
+              <button type="button" onClick={logout}>
+                <i className="fa-solid fa-right-from-bracket" /> 로그아웃
+              </button>
+            </>
+          ) : (
+            <a href="/login">
+              <i className="fa-solid fa-right-to-bracket" /> 로그인
+            </a>
+          )}
+        </div>
         <BgmCard />
       </div>
     </aside>
@@ -310,7 +315,7 @@ function Footer() {
   const { site } = useApp()
   return (
     <footer className="site-footer">
-      {site.footer ? <span>{site.footer}</span> : <span>© {new Date().getFullYear()} {site.title}</span>}
+      <span>{site.footer || 'ODAN DREAMPAIR'}</span>
     </footer>
   )
 }

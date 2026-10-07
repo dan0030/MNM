@@ -207,6 +207,19 @@ h4 {
   }
 }
 
+/* 라이트/다크 전환 효과 */
+.mode-reveal::view-transition-old(root),
+.mode-reveal::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+.mode-fade,
+.mode-fade *,
+.mode-fade *::before,
+.mode-fade *::after {
+  transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, fill 0.5s ease !important;
+}
+
 :root[data-anim='off'] *,
 :root[data-anim='off'] *::before,
 :root[data-anim='off'] *::after {
@@ -447,7 +460,173 @@ h4 {
 }
 
 .drawer-section {
-  padding: 0 20px 26px;
+  padding: 0 20px 22px;
+}
+
+.section-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-sub);
+  margin: 0 4px 12px;
+}
+
+.drawer-head-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.drawer-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.drawer-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s;
+}
+.drawer-tile:hover {
+  color: var(--accent);
+}
+.drawer-tile:active {
+  transform: scale(0.95);
+}
+.drawer-tile-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.drawer-account {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.drawer-account a,
+.drawer-account button {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+.drawer-account a:hover,
+.drawer-account button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.search-field {
+  margin-top: 18px;
+}
+
+:root[data-header='compact'] .large-title {
+  min-height: 0;
+  padding: 12px 8px 18px;
+}
+:root[data-header='compact'] .large-title h1 {
+  font-size: 1.6rem;
+}
+:root[data-header='centered'] .large-title {
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-link {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ---------------- 서랍 메뉴 ---------------- */
+
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(320px, 86vw);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--drawer-bg);
+  transform: translateX(-105%);
+  transition: transform 0.4s var(--ease), visibility 0.4s;
+  visibility: hidden;
+  box-shadow: 10px 0 40px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+:root[data-drawer='right'] .drawer {
+  left: auto;
+  right: 0;
+  transform: translateX(105%);
+}
+.drawer.open {
+  transform: none !important;
+  visibility: visible;
+}
+
+.drawer-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s;
+}
+.drawer-dim.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 18px 18px 24px;
+}
+.drawer-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-sub);
+  letter-spacing: 0;
+}
+
+.drawer-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.drawer-section {
+  padding: 0 20px 22px;
 }
 
 .section-label {
@@ -497,12 +676,17 @@ h4 {
   color: var(--accent);
   font-size: 0.9rem;
 }
-.search-field input {
+form.search-field input,
+form.search-field input:focus {
   flex: 1;
   min-width: 0;
-  border: none;
-  background: none;
+  min-height: 0;
   height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   outline: none;
 }
 .search-field.big input {

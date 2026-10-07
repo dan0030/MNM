@@ -117,7 +117,7 @@ function FieldInput({ id, f, value, onChange }) {
     case 'date':
       return <input id={id} type="date" value={value || ''} onChange={(e) => onChange(e.target.value)} />
     case 'image':
-      return <ImageInput id={id} value={value} onChange={onChange} accept={f.accept} />
+      return <ImageInput id={id} value={value} onChange={onChange} accept={f.accept} uploadOptions={f.uploadOptions} />
     case 'icon':
       return <IconInput id={id} value={value} onChange={onChange} />
     case 'strings':
@@ -150,7 +150,7 @@ export function ColorInput({ id, value, onChange }) {
   )
 }
 
-export function ImageInput({ id, value, onChange, accept = 'image/*' }) {
+export function ImageInput({ id, value, onChange, accept = 'image/*', uploadOptions }) {
   const app = useApp()
   const [busy, setBusy] = useState(false)
   async function upload() {
@@ -158,7 +158,7 @@ export function ImageInput({ id, value, onChange, accept = 'image/*' }) {
     if (!file) return
     setBusy(true)
     try {
-      onChange(await uploadFile(file))
+      onChange(await uploadFile(file, uploadOptions))
     } catch (e) {
       app.showToast(e.message)
     } finally {
@@ -167,7 +167,7 @@ export function ImageInput({ id, value, onChange, accept = 'image/*' }) {
   }
   return (
     <div className="image-input">
-      {value && accept.startsWith('image') ? <img src={value} alt="" /> : <div className="image-input-empty"><i className="fa-regular fa-image" /></div>}
+      {value && /image|\.cur/.test(accept) ? <img src={value} alt="" /> : <div className="image-input-empty"><i className="fa-regular fa-image" /></div>}
       <div className="image-input-side">
         <input id={id} type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="이미지 주소 또는 업로드" />
         <div className="row gap-s">

@@ -49,15 +49,49 @@ export function AppProvider({ children }) {
     setFavicon(site.favicon)
   }, [site.favicon])
 
-  const toggleMode = useCallback(() => {
-    const next = mode === 'dark' ? 'light' : 'dark'
-    try {
-      localStorage.setItem('od-mode', next)
-    } catch {
-      // 무시
-    }
-    setModeOverride(next)
-  }, [mode])
+  // 라이트/다크 전환: 누른 자리에서 원이 퍼지듯 바뀌고, 지원하지 않는 브라우저에서는 색이 부드럽게 섞여요.
+  const toggleMode = useCallback(
+    (event) => {
+      const next = mode === 'dark' ? 'light' : 'dark'
+      try {
+        localStorage.setItem('od-mode', next)
+      } catch {
+        // 무시
+      }
+      const root = document.documentElement
+      const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || theme.animations === false
+      const switchNow = () => {
+        applyTheme(theme, next)
+        setModeOverride(next)
+      }
+      if (reduce) {
+        switchNow()
+        return
+      }
+      if (document.startViewTransition) {
+        const rect = event?.currentTarget?.getBoundingClientRect?.()
+        const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2
+        const y = rect ? rect.top + rect.height / 2 : 0
+        const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+        root.classList.add('mode-reveal')
+        const vt = document.startViewTransition(switchNow)
+        vt.ready
+          .then(() => {
+            root.animate(
+              { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+              { duration: 550, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', pseudoElement: '::view-transition-new(root)' },
+            )
+          })
+          .catch(() => {})
+        vt.finished.finally(() => root.classList.remove('mode-reveal'))
+        return
+      }
+      root.classList.add('mode-fade')
+      switchNow()
+      setTimeout(() => root.classList.remove('mode-fade'), 600)
+    },
+    [mode, theme],
+  )
 
   const saveSetting = useCallback(async (key, value) => {
     await api.saveSetting(key, value)

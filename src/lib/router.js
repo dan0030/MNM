@@ -53,6 +53,7 @@ export function matchRoute(path) {
     ['notice', /^\/notice$/],
     ['guestbook', /^\/guestbook$/],
     ['calendar', /^\/calendar$/],
+    ['banners', /^\/banners$/],
     ['login', /^\/login$/],
     ['write', /^\/write(?:\/(\d+))?$/],
     ['admin', /^\/admin(?:\/([\w-]+))?$/],
