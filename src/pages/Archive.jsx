@@ -99,7 +99,11 @@ export default function Archive({ kind, param, search }) {
 
   return (
     <div className="archive">
-      <LargeTitle title={title} subtitle={subtitle} eyebrow={kind === 'category' && category?.icon ? <i className={category.icon} /> : null}>
+      <LargeTitle
+        pageKey={!date && (kind === 'archive' || kind === 'notice' || (kind === 'search' && !q)) ? kind : undefined}
+        title={title}
+        subtitle={subtitle}
+        eyebrow={kind === 'category' && category?.icon ? <i className={category.icon} /> : null}>
         {kind === 'search' && (
           <form
             className="search-field big"

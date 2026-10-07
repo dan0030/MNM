@@ -66,7 +66,7 @@ export default function BannersPage() {
 
   return (
     <div className="banners-page">
-      <LargeTitle title="배너" subtitle={site.bannerIntro} />
+      <LargeTitle pageKey="banners" title="배너" subtitle={site.bannerIntro} />
 
       {mine.image && (
         <section className="card padded my-banner">

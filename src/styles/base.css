@@ -918,3 +918,28 @@ form.search-field input:focus {
     padding: 16px;
   }
 }
+
+/* 페이지 문구 꾸미기 (관리 › 페이지 문구) */
+.large-title.align-center {
+  text-align: center;
+}
+.large-title.align-left {
+  text-align: left;
+}
+.large-title-image {
+  display: block;
+  max-width: min(100%, 320px);
+  max-height: 160px;
+  margin: 0 0 14px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+.large-title.align-center .large-title-image,
+:root[data-header='centered'] .large-title:not(.align-left) .large-title-image {
+  margin-left: auto;
+  margin-right: auto;
+}
+.large-title-sub a {
+  color: var(--accent);
+  text-decoration: underline;
+}

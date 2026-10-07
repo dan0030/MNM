@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { useApp } from '../lib/store.jsx'
+import { swapNames, useApp } from '../lib/store.jsx'
 import { navigate, useLocation } from '../lib/router.js'
 import { api } from '../lib/api.js'
 import { isRecent } from '../lib/format.js'
@@ -59,9 +59,15 @@ export function useTopbarTitle(title) {
 }
 
 /* One UI 특유의 “큰 제목” 영역. 스크롤해서 제목이 사라지면 상단바에 작은 제목이 나타나요. */
-export function LargeTitle({ title, subtitle, children, eyebrow }) {
+// pageKey를 주면 관리 › 페이지 문구에서 바꾼 제목·문구가 기본값 대신 쓰여요.
+export function LargeTitle({ pageKey, title: defaultTitle, subtitle: defaultSubtitle, children, eyebrow: defaultEyebrow }) {
   const { setTitle, setCollapsed } = useContext(TitleContext)
   const ref = useRef(null)
+  const { site } = useApp()
+  const custom = (pageKey && site.pages?.[pageKey]) || {}
+  const title = custom.title || defaultTitle
+  const subtitle = custom.hideSubtitle ? null : custom.subtitle ? <span dangerouslySetInnerHTML={{ __html: swapNames(custom.subtitle, site) }} /> : defaultSubtitle
+  const eyebrow = custom.eyebrow ? <span dangerouslySetInnerHTML={{ __html: swapNames(custom.eyebrow, site) }} /> : defaultEyebrow
 
   useEffect(() => {
     setTitle(title)
@@ -76,11 +82,12 @@ export function LargeTitle({ title, subtitle, children, eyebrow }) {
   }, [title, setTitle, setCollapsed])
 
   return (
-    <header className="large-title">
+    <header className={`large-title ${custom.align ? `align-${custom.align}` : ''}`}>
       <div className="large-title-inner">
+        {custom.image && <img className="large-title-image" src={custom.image} alt="" />}
         {eyebrow && <div className="large-title-eyebrow">{eyebrow}</div>}
         <h1 ref={ref}>{title}</h1>
-        {subtitle && <p className="large-title-sub">{subtitle}</p>}
+        {subtitle && <div className="large-title-sub">{subtitle}</div>}
         {children}
       </div>
     </header>

@@ -22,7 +22,7 @@ export function GuestbookPage() {
   if (site.features.guestbook === false) return <Empty title="방명록이 닫혀 있어요" />
   return (
     <div className="guestbook">
-      <LargeTitle title="방명록" subtitle={site.guestbookIntro} />
+      <LargeTitle pageKey="guestbook" title="방명록" subtitle={site.guestbookIntro} />
       <Comments />
     </div>
   )
@@ -36,7 +36,7 @@ export function TagsPage() {
   }, [])
   return (
     <div>
-      <LargeTitle title="태그 모음" subtitle={tags ? `${tags.length}개의 태그` : ''} />
+      <LargeTitle pageKey="tags" title="태그 모음" subtitle={tags ? `${tags.length}개의 태그` : ''} />
       {!tags ? (
         <Spinner />
       ) : tags.length === 0 ? (
@@ -81,11 +81,15 @@ export function CalendarPage() {
 
   return (
     <div className="calendar-page">
-      <LargeTitle title="캘린더" subtitle="날짜별로 모아보는 우리의 기록" />
+      <LargeTitle pageKey="calendar" title="캘린더" subtitle="날짜별로 모아보는 우리의 기록" />
       <WidgetFrame widget={{ type: 'calendar', size: 'L', config: {} }}>
         <CalendarWidget config={config} size="L" onMonthChange={setMonth} />
       </WidgetFrame>
-      <h2 className="section-title">{month ? `${month.replace('-', '년 ')}월의 기록` : ''}</h2>
+      {month && app.site.pages?.calendar?.listTitle !== ' ' && (
+        <h2 className="section-title">
+          {(app.site.pages?.calendar?.listTitle || '{년}년 {월}월의 기록').replace('{년}', month.slice(0, 4)).replace('{월}', String(Number(month.slice(5))))}
+        </h2>
+      )}
       {!posts ? <Spinner /> : posts.length ? <PostList items={posts} style="timeline" /> : <Empty icon="fa-regular fa-calendar" title="이 달에는 기록이 없어요" />}
     </div>
   )
