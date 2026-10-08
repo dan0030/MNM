@@ -115,7 +115,7 @@ export default function Home() {
       {editing ? (
         <HomeEditor draft={draft} setDraft={setDraft} startTarget={layoutKey} onCancel={() => setEditing(false)} onSave={saveDraft} />
       ) : (
-        <HomePages key={layoutKey} home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin && !IN_PREVIEW ? quickUpdate : null} fixed={fixed} admin={app.admin} align={theme.homeAlign || 'top'} />
+        <HomePages key={layoutKey} home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin && !IN_PREVIEW ? quickUpdate : null} fixed={fixed} admin={app.admin && !isMobile} align={theme.homeAlign || 'top'} />
       )}
       {app.admin && !editing && !IN_PREVIEW && (
         <button type="button" className="fab" onClick={startEdit} aria-label="홈 화면 편집">
@@ -148,7 +148,7 @@ function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, adm
       if (!el) return
       const top = el.getBoundingClientRect().top + scrollTop()
       const bottomSpace = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-space')) || 12
-      setHeight(Math.max(320, Math.floor(window.innerHeight - top - bottomSpace)))
+      setHeight(Math.max(240, Math.floor(window.innerHeight - top - bottomSpace)))
     }
     measure()
     const t = setTimeout(measure, 400)

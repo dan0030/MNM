@@ -1795,7 +1795,9 @@ a.cal-day:hover {
 .phone-preview {
   position: fixed;
   right: 20px;
-  bottom: calc(var(--bottom-nav-space, 0px) + 12px);
+  top: 12px;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
   z-index: 1100;
   display: flex;
   flex-direction: column;
@@ -1869,15 +1871,14 @@ a.cal-day:hover {
   .phone-preview {
     left: 50%;
     right: auto;
-    bottom: 12px;
     transform: translateX(-50%);
     animation: none;
   }
 }
 
 /* 미리보기를 켜면 넓은 화면에서는 본문을 왼쪽으로 비켜서 가리지 않게 해요 */
-@media (min-width: 1100px) {
+@media (min-width: 860px) {
   html.phone-preview-open body {
-    padding-right: 420px;
+    padding-right: 430px;
   }
 }

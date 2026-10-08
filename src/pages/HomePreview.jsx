@@ -9,6 +9,8 @@ const PHONE_H = 844
 
 export function PhonePreview({ home, target, onClose }) {
   const frameRef = useRef(null)
+  const panelRef = useRef(null)
+  const shellRef = useRef(null)
   const homeRef = useRef(home)
   homeRef.current = home
   const [scale, setScale] = useState(1)
@@ -41,18 +43,28 @@ export function PhonePreview({ home, target, onClose }) {
     return () => document.documentElement.classList.remove('phone-preview-open')
   }, [])
 
+  // 창 높이 안에 미리보기 전체(제목줄 포함)가 들어가도록 휴대폰 화면 크기를 줄여요.
   useEffect(() => {
-    const fit = () => setScale(Math.min(1, (window.innerHeight - 150) / PHONE_H, (window.innerWidth - 32) / PHONE_W))
+    const fit = () => {
+      const panel = panelRef.current
+      const shell = shellRef.current
+      if (!panel || !shell) return
+      // 휴대폰 화면을 뺀 나머지(제목줄·안내·여백) 높이
+      const chrome = panel.offsetHeight - shell.offsetHeight + 20
+      const availH = window.innerHeight - 24 - chrome
+      const availW = window.innerWidth - 56
+      setScale(Math.max(0.3, Math.min(1, availH / PHONE_H, availW / PHONE_W)))
+    }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
-  }, [])
+  }, [min, target])
 
   const separate = hasMobileLayout(home)
   const note = separate ? '모바일 전용 홈 화면' : home.mobile?.pages ? '모바일 배치가 꺼져 있어 PC 배치가 보여요' : 'PC 배치가 그대로 보여요'
 
   return createPortal(
-    <aside className={`phone-preview ${min ? 'min' : ''}`} aria-label="모바일 홈 화면 미리보기">
+    <aside ref={panelRef} className={`phone-preview ${min ? 'min' : ''}`} aria-label="모바일 홈 화면 미리보기">
       <div className="phone-preview-head">
         <span className="phone-preview-title">
           <span>
@@ -75,7 +87,7 @@ export function PhonePreview({ home, target, onClose }) {
       {!min && (
         <>
           {target === 'pc' && separate && <p className="phone-preview-hint">지금은 PC 화면을 편집 중이에요. 휴대폰에는 모바일 전용 배치가 보여요.</p>}
-          <div className="phone-shell" style={{ width: PHONE_W * scale + 20, height: PHONE_H * scale + 20 }}>
+          <div className="phone-shell" ref={shellRef} style={{ width: PHONE_W * scale + 20, height: PHONE_H * scale + 20 }}>
             <iframe
               key={reloadKey}
               ref={frameRef}
