@@ -56,6 +56,9 @@ export const api = {
     return request('POST', '/upload', fd)
   },
   files: () => request('GET', '/files'),
+  deleteFile: (key) => request('DELETE', `/files/${encodeURIComponent(key)}`),
+  cleanupFiles: (hours) => request('POST', '/files-cleanup', { hours }),
+  migrateFiles: () => request('POST', '/files-migrate'),
   exportUrl: '/api/export',
   importAll: (data) => request('POST', '/import', data),
 }

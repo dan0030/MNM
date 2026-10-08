@@ -1,4 +1,5 @@
 import { ensureSchema } from './schema.js'
+import { allReferencedKeys, deleteFile, difference, extractKeys, keysOfPosts, keysOfSetting, migrateToR2, removeUnused } from './files.js'
 import { checkPassword, hashPassword, randomId, safeEqual, sign, verify } from './crypto.js'
 
 const SESSION_COOKIE = 'od_session'
@@ -24,6 +25,8 @@ export default {
       if (url.pathname.startsWith('/api/')) {
         if (!env.DB) throw new HttpError(500, 'D1 데이터베이스(DB)가 연결되지 않았어요. wrangler.jsonc를 확인해주세요.')
         await ensureSchema(env.DB)
+        // 예전에 D1에 넣어둔 파일이 남아 있으면 요청이 올 때마다 조금씩 R2로 옮겨요.
+        if (env.BUCKET) ctx.waitUntil(migrateToR2(env).catch((err) => console.error('R2 이동 실패', err)))
         return await handleApi(request, env, ctx, url)
       }
       if (url.pathname.startsWith('/files/')) {
@@ -201,10 +204,13 @@ async function handleApi(request, env, ctx, url) {
     const text = await request.text()
     if (text.length > MAX_SETTING_BYTES) throw new HttpError(413, '설정 내용이 너무 커요.')
     if (parseJson(text, undefined) === undefined) throw new HttpError(400, '설정 형식이 올바르지 않아요.')
+    const beforeKeys = await keysOfSetting(db, key)
     await db
       .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = ?2, updated_at = ?3')
       .bind(key, text, nowIso())
       .run()
+    // 설정에서 빠진 사진(프로필·배너 교체 등)은 다른 곳에서 안 쓰면 지워요.
+    ctx.waitUntil(removeUnused(env, difference(beforeKeys, extractKeys(text))))
     return json({ ok: true })
   }
 
@@ -230,16 +236,22 @@ async function handleApi(request, env, ctx, url) {
     }
     if (method === 'PUT') {
       requireAdmin()
+      const beforeKeys = await keysOfPosts(db, [id])
       await savePost(db, id, await readJson(request))
+      // 글에서 지운 사진·파일은 다른 곳에서 안 쓰면 저장소에서도 지워요.
+      const removed = difference(beforeKeys, await keysOfPosts(db, [id]))
+      if (removed.length) ctx.waitUntil(removeUnused(env, removed))
       return json({ id })
     }
     if (method === 'DELETE') {
       requireAdmin()
+      const beforeKeys = await keysOfPosts(db, [id])
       await db.batch([
         db.prepare('DELETE FROM comments WHERE post_id = ? OR post_id IN (SELECT id FROM posts WHERE thread_id = ?)').bind(id, id),
         db.prepare('DELETE FROM posts WHERE id = ? OR thread_id = ?').bind(id, id),
       ])
-      return json({ ok: true })
+      const removed = await removeUnused(env, [...beforeKeys])
+      return json({ ok: true, removedFiles: removed.length })
     }
   }
 
@@ -300,8 +312,38 @@ async function handleApi(request, env, ctx, url) {
 
   if (path === '/files' && method === 'GET') {
     requireAdmin()
-    const { results } = await db.prepare('SELECT key, mime, size, created_at FROM files ORDER BY created_at DESC LIMIT 200').all()
-    return json({ files: results.map((f) => ({ ...f, url: `/files/${f.key}` })) })
+    const [list, used, totals] = await Promise.all([
+      db.prepare('SELECT key, mime, size, created_at, data IS NOT NULL AS in_d1 FROM files ORDER BY created_at DESC LIMIT 300').all(),
+      allReferencedKeys(db),
+      db.prepare('SELECT COUNT(*) AS count, COALESCE(SUM(size), 0) AS bytes, COALESCE(SUM(data IS NOT NULL), 0) AS in_d1 FROM files').first(),
+    ])
+    return json({
+      storage: { r2: !!env.BUCKET, count: totals.count, bytes: totals.bytes, pendingD1: totals.in_d1 },
+      files: list.results.map((f) => ({ key: f.key, mime: f.mime, size: f.size, created_at: f.created_at, inD1: !!f.in_d1, used: used.has(f.key), url: `/files/${f.key}` })),
+    })
+  }
+
+  if ((m = path.match(/^\/files\/(.+)$/)) && method === 'DELETE') {
+    requireAdmin()
+    await deleteFile(env, decodeURIComponent(m[1]))
+    return json({ ok: true })
+  }
+
+  // 어디에도 쓰이지 않는 파일 한꺼번에 지우기 (방금 올리고 아직 저장 안 한 글의 사진은 건드리지 않게 시간 여유를 둬요)
+  if (path === '/files-cleanup' && method === 'POST') {
+    requireAdmin()
+    const { hours = 24 } = await readJson(request).catch(() => ({}))
+    const cutoff = new Date(Date.now() - Math.max(0, Number(hours) || 0) * 3600 * 1000).toISOString()
+    const [{ results }, used] = await Promise.all([db.prepare('SELECT key FROM files WHERE created_at < ?').bind(cutoff).all(), allReferencedKeys(db)])
+    const targets = results.map((r) => r.key).filter((k) => !used.has(k))
+    for (const key of targets) await deleteFile(env, key)
+    return json({ removed: targets.length })
+  }
+
+  if (path === '/files-migrate' && method === 'POST') {
+    requireAdmin()
+    if (!env.BUCKET) throw new HttpError(400, 'R2 저장소(BUCKET)가 연결되지 않았어요.')
+    return json(await migrateToR2(env, 10, true))
   }
 
   if (path === '/export' && method === 'GET') {

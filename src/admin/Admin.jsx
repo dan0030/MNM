@@ -643,11 +643,64 @@ function CommentsTab() {
 function BackupTab() {
   const app = useApp()
   const [files, setFiles] = useState(null)
+  const [storage, setStorage] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [filter, setFilter] = useState('all')
+
+  const loadFiles = () =>
+    api.files().then((res) => {
+      setFiles(res.files)
+      setStorage(res.storage)
+    })
 
   useEffect(() => {
-    api.files().then((res) => setFiles(res.files))
+    loadFiles().catch((e) => app.showToast(e.message))
   }, [])
+
+  async function removeFile(f) {
+    const msg = f.used
+      ? '이 파일은 아직 글이나 설정에서 쓰이고 있어요. 지우면 그 자리에서 사진이 깨져 보여요. 그래도 지울까요?'
+      : '이 파일을 저장소에서 지울까요? 되돌릴 수 없어요.'
+    if (!window.confirm(msg)) return
+    try {
+      await api.deleteFile(f.key)
+      setFiles((list) => list.filter((x) => x.key !== f.key))
+      app.showToast('지웠어요.')
+    } catch (e) {
+      app.showToast(e.message)
+    }
+  }
+
+  async function cleanup() {
+    if (!window.confirm('어디에도 쓰이지 않는 파일을 모두 지울까요? (방금 올리고 아직 저장하지 않은 글의 사진을 지키려고, 하루 지난 파일만 지워요)')) return
+    setBusy(true)
+    try {
+      const res = await api.cleanupFiles(24)
+      app.showToast(res.removed ? `${res.removed}개를 지웠어요.` : '지울 파일이 없어요.')
+      await loadFiles()
+    } catch (e) {
+      app.showToast(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function migrate() {
+    setBusy(true)
+    try {
+      let left = storage?.pendingD1 || 0
+      for (let i = 0; i < 100 && left > 0; i++) left = (await api.migrateFiles()).remaining
+      app.showToast('R2로 모두 옮겼어요.')
+      await loadFiles()
+    } catch (e) {
+      app.showToast(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const shown = (files || []).filter((f) => (filter === 'unused' ? !f.used : filter === 'used' ? f.used : true))
+  const mb = (b) => (b / 1024 / 1024).toFixed(b > 100 * 1024 * 1024 ? 0 : 1)
 
   async function importFile(e) {
     const file = e.target.files?.[0]
@@ -683,30 +736,67 @@ function BackupTab() {
       </div>
       <div className="card padded">
         <h2 className="section-title small">올린 파일</h2>
+        {storage && (
+          <div className="storage-info">
+            <span className={`badge ${storage.r2 ? '' : 'warn'}`}>{storage.r2 ? 'R2 저장소' : 'D1 저장 (R2 미연결)'}</span>
+            <span>
+              {storage.count}개 · {mb(storage.bytes)}MB {storage.r2 ? '/ 무료 10GB' : ''}
+            </span>
+            {storage.r2 && storage.pendingD1 > 0 && (
+              <button type="button" className="btn small" onClick={migrate} disabled={busy}>
+                <i className="fa-solid fa-truck-arrow-right" /> 남은 {storage.pendingD1}개 R2로 옮기기
+              </button>
+            )}
+          </div>
+        )}
+        <p className="muted file-help">
+          글이나 설정에서 사진을 빼거나 글을 지우면, 다른 곳에서 쓰지 않는 파일은 저장소에서도 자동으로 지워져요. 아래에서 직접 지울 수도 있어요.
+        </p>
+        <div className="list-toolbar wrap">
+          <div className="segmented small">
+            {[
+              ['all', '전체'],
+              ['used', '사용 중'],
+              ['unused', '안 쓰는 파일'],
+            ].map(([v, l]) => (
+              <button type="button" key={v} className={filter === v ? 'active' : ''} onClick={() => setFilter(v)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="btn small ghost danger" onClick={cleanup} disabled={busy}>
+            <i className="fa-solid fa-broom" /> 안 쓰는 파일 정리
+          </button>
+        </div>
         {!files ? (
           <Spinner />
-        ) : files.length === 0 ? (
-          <p className="muted">아직 올린 파일이 없어요.</p>
+        ) : shown.length === 0 ? (
+          <p className="muted">파일이 없어요.</p>
         ) : (
           <div className="file-grid">
-            {files.map((f) => (
-              <button
-                type="button"
-                key={f.key}
-                className="file-cell"
-                title="주소 복사"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(location.origin + f.url)
-                    app.showToast('주소를 복사했어요.')
-                  } catch {
-                    window.prompt('주소', location.origin + f.url)
-                  }
-                }}
-              >
-                {f.mime.startsWith('image/') ? <img src={f.url} alt="" loading="lazy" /> : <i className="fa-regular fa-file" />}
-                <span>{(f.size / 1024).toFixed(0)}KB</span>
-              </button>
+            {shown.map((f) => (
+              <div key={f.key} className={`file-cell ${f.used ? '' : 'unused'}`}>
+                <button
+                  type="button"
+                  className="file-thumb"
+                  title="주소 복사"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(location.origin + f.url)
+                      app.showToast('주소를 복사했어요.')
+                    } catch {
+                      window.prompt('주소', location.origin + f.url)
+                    }
+                  }}
+                >
+                  {f.mime.startsWith('image/') ? <img src={f.url} alt="" loading="lazy" /> : <i className="fa-regular fa-file" />}
+                </button>
+                <span className="file-size">{(f.size / 1024).toFixed(0)}KB</span>
+                {!f.used && <span className="file-flag">안 씀</span>}
+                <button type="button" className="file-del" onClick={() => removeFile(f)} aria-label="파일 지우기">
+                  <i className="fa-solid fa-trash" />
+                </button>
+              </div>
             ))}
           </div>
         )}

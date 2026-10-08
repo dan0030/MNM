@@ -18,7 +18,12 @@
       "database_name": "mnm-db",
       "database_id": "d34cd70d-0534-4698-a5bc-475c6ff6c94f"
     }
+  ],
+  // 올린 사진·파일은 R2에 저장돼요. (글·설정은 D1)
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "mnm-files"
+    }
   ]
-  // 이미지를 R2에 저장하고 싶다면 아래 주석을 풀어주세요. (없으면 D1에 저장됩니다)
-  // ,"r2_buckets": [{ "binding": "BUCKET", "bucket_name": "our-diary-files" }]
 }
