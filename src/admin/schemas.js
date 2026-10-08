@@ -195,8 +195,9 @@ export const DESIGN_SECTIONS = [
           { value: 'centered', label: '가운데' },
         ],
       },
-      { key: 'expandedHeight', label: '큰 제목 영역 높이', type: 'range', min: 12, max: 50, unit: 'vh', show: (t) => t.headerStyle !== 'compact' },
+      { key: 'expandedHeight', label: '큰 제목 영역 높이 (홈 제외 페이지)', type: 'range', min: 12, max: 50, unit: 'vh', show: (t) => t.headerStyle !== 'compact' },
       { key: 'homeTitle', label: '홈에도 사이트 이름 큰 제목 보이기', type: 'toggle' },
+      { key: 'homeTitleHeight', label: '홈 큰 제목 영역 높이 (홈에만 적용)', type: 'range', min: 0, max: 50, unit: 'vh', show: (t) => t.homeTitle },
       {
         key: 'homeTitleBg',
         label: '홈 큰 제목 배경',

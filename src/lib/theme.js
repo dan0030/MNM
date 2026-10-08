@@ -163,10 +163,13 @@ export function applyTheme(theme, mode) {
     '--frame-top': `${Number(theme.frameTop ?? 14)}px`,
     '--frame-width': Number(theme.frameWidth) > 0 ? `${Number(theme.frameWidth)}px` : `${theme.contentWidth}px`,
     '--scrollbar': theme.scrollbarColor || `color-mix(in srgb, ${pal.accent} 55%, transparent)`,
+    '--home-title-height': `${Number(theme.homeTitleHeight ?? 14)}vh`,
     '--btn-radius': theme.buttonShape === 'pill' ? '999px' : theme.buttonShape === 'square' ? '6px' : 'var(--radius-sm)',
   }
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, String(v))
 
+  // 단색이 아니면 페이지를 #root 안에서 스크롤해요. 그래야 스크롤바 뒤(바깥 줄)에도 배경이 그대로 보여요.
+  root.classList.toggle('inner-scroll', theme.bgType && theme.bgType !== 'solid')
   root.dataset.mode = mode
   root.dataset.card = theme.cardStyle
   root.dataset.header = theme.headerStyle

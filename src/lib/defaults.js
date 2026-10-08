@@ -150,6 +150,7 @@ export const DEFAULT_THEME = {
   headerStyle: 'expanded', // expanded | compact | centered
   expandedHeight: 30,
   homeTitle: true,
+  homeTitleHeight: 14, // 홈 큰 제목 영역 높이(vh). 다른 페이지 제목 높이(expandedHeight)와 따로예요
   homeTitleBg: 'none', // none | card | glass | image
   homeTitleImage: '',
   homeTitleDim: 0.35,

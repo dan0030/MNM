@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useApp } from '../lib/store.jsx'
 import { LargeTitle, useTopbarTitle } from '../components/Shell.jsx'
+import { scrollTop } from '../lib/router.js'
 import { Sheet } from '../components/ui.jsx'
 import { Fields } from '../components/Fields.jsx'
 import { COMMON_WIDGET_FIELDS, WIDGETS } from '../widgets/index.jsx'
@@ -102,7 +103,7 @@ function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, adm
     const measure = () => {
       const el = swipeRef.current
       if (!el) return
-      const top = el.getBoundingClientRect().top + window.scrollY
+      const top = el.getBoundingClientRect().top + scrollTop()
       const bottomSpace = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-space')) || 12
       setHeight(Math.max(320, Math.floor(window.innerHeight - top - bottomSpace)))
     }

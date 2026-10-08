@@ -1225,11 +1225,29 @@ html.home-fixed .page {
 }
 
 /* 홈 큰 제목은 다른 페이지보다 낮게 */
-.large-title.home-title {
-  min-height: calc(var(--expanded-height) * 0.5);
+.large-title.home-title,
+:root[data-header='compact'] .large-title.home-title,
+.browser-body .large-title.home-title {
+  min-height: var(--home-title-height, 14vh);
   padding-top: 12px;
   padding-bottom: 16px;
 }
-.large-title.home-title.bd-image {
-  min-height: calc(var(--expanded-height) * 0.55);
+
+/* ---------------- 안쪽 스크롤 (배경이 사진·패턴·그라데이션일 때) ---------------- */
+
+html.inner-scroll,
+html.inner-scroll body {
+  height: 100%;
+  overflow: hidden;
+}
+html.inner-scroll #root {
+  height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+html.inner-scroll body.no-scroll #root,
+html.inner-scroll.home-fixed #root {
+  overflow-y: hidden;
 }

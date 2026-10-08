@@ -3,6 +3,21 @@ import { useEffect, useState } from 'react'
 // 라이브러리 없이 쓰는 아주 작은 라우터입니다.
 const listeners = new Set()
 
+// 배경이 사진·패턴·그라데이션이면 페이지가 #root 안에서 스크롤돼요. (스크롤바 뒤로 배경이 비쳐 보이게)
+export function scrollRoot() {
+  return document.documentElement.classList.contains('inner-scroll') ? document.getElementById('root') : null
+}
+
+export function scrollTop() {
+  return scrollRoot()?.scrollTop ?? window.scrollY
+}
+
+export function scrollToTop() {
+  const el = scrollRoot()
+  if (el) el.scrollTo({ top: 0 })
+  else window.scrollTo({ top: 0 })
+}
+
 function current() {
   return { path: window.location.pathname, search: window.location.search, hash: window.location.hash }
 }
@@ -13,7 +28,7 @@ export function navigate(to, { replace = false, keepScroll = false } = {}) {
   if (replace) window.history.replaceState({}, '', target.pathname + target.search + target.hash)
   else window.history.pushState({}, '', target.pathname + target.search + target.hash)
   listeners.forEach((fn) => fn())
-  if (!keepScroll && !same) window.scrollTo({ top: 0 })
+  if (!keepScroll && !same) scrollToTop()
 }
 
 window.addEventListener('popstate', () => listeners.forEach((fn) => fn()))
