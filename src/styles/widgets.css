@@ -161,7 +161,8 @@
 
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 12칸 격자: S=3, M=6, L=12칸. 위젯마다 너비(칸 수)를 따로 정할 수 있어요 */
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--gap);
   align-items: stretch;
 }
@@ -169,14 +170,49 @@
 .widget,
 .edit-slot,
 .add-widget {
-  grid-column: span 4;
+  grid-column: span 12;
   min-width: 0;
 }
 .size-M {
-  grid-column: span 2;
+  grid-column: span 6;
 }
 .size-S {
-  grid-column: span 1;
+  grid-column: span 3;
+}
+
+/* 높이를 정한 위젯: 그 높이로 고정하고 넘치는 내용은 위젯 안에서 스크롤 */
+.widget.fixed-h {
+  height: var(--w-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.widget.fixed-h > .banner-widget,
+.widget.fixed-h > .image-widget,
+.widget.fixed-h > a > .image-widget,
+.widget.fixed-h > .shortcut-widget,
+.widget.fixed-h > .bgm-card,
+.widget.fixed-h > .clock-widget,
+.widget.fixed-h > .dday-widget,
+.widget.fixed-h > .profile-widget,
+.widget.fixed-h > .quote-widget {
+  height: 100%;
+}
+.widget.fixed-h > a {
+  display: block;
+  height: 100%;
+}
+.widget.fixed-h .banner-widget {
+  aspect-ratio: auto;
+}
+.widget.fixed-h .image-widget img {
+  aspect-ratio: auto;
+  height: 100%;
+}
+.widget.fixed-h .spacer-widget {
+  height: 100% !important;
+}
+.edit-slot .widget.fixed-h {
+  max-height: none;
 }
 
 .widget {

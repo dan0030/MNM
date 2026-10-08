@@ -10,6 +10,29 @@ import { uid } from '../lib/format.js'
 
 const SIZE_LABEL = { S: '작게', M: '중간', L: '크게' }
 
+// 홈 격자는 12칸이에요. S=3칸(25%), M=6칸(50%), L=12칸(100%)이고, 너비를 직접 고르면 widget.span이 우선해요.
+const SIZE_SPAN = { S: 3, M: 6, L: 12 }
+export const WIDTH_STEPS = [
+  { span: 3, label: '25%' },
+  { span: 4, label: '33%' },
+  { span: 6, label: '50%' },
+  { span: 8, label: '66%' },
+  { span: 9, label: '75%' },
+  { span: 12, label: '100%' },
+]
+export function spanOf(w) {
+  return Number(w.span) || SIZE_SPAN[w.size || 'L'] || 12
+}
+// 위젯 안쪽 모양(아이콘형·세로 배치 등)은 실제 너비에 맞춰 S/M/L로 알려줘요.
+export function sizeOf(w) {
+  if (!w.span) return w.size || 'L'
+  const s = spanOf(w)
+  return s <= 3 ? 'S' : s <= 8 ? 'M' : 'L'
+}
+function widthLabel(w) {
+  return WIDTH_STEPS.find((x) => x.span === spanOf(w))?.label || `${Math.round((spanOf(w) / 12) * 100)}%`
+}
+
 export default function Home() {
   const app = useApp()
   const { site, theme } = app
@@ -282,10 +305,13 @@ export function WidgetFrame({ widget, children, editing }) {
   const def = WIDGETS[widget.type]
   const config = widget.config || {}
   const styleName = config.style || (def?.bare ? 'bare' : 'card')
+  const h = Number(widget.height) || 0
+  const style = { ...widgetStyle(config), gridColumn: `span ${spanOf(widget)}` }
+  if (h) style['--w-height'] = `${h}px`
   return (
     <div
-      className={`widget w-${widget.type} size-${widget.size || 'L'} style-${styleName} ${config.bgImage ? 'has-bg-image' : ''} ${config.align === 'center' ? 'align-center' : ''} ${editing ? 'is-editing' : ''}`}
-      style={widgetStyle(config)}
+      className={`widget w-${widget.type} size-${sizeOf(widget)} style-${styleName} ${h ? 'fixed-h' : ''} ${config.bgImage ? 'has-bg-image' : ''} ${config.align === 'center' ? 'align-center' : ''} ${editing ? 'is-editing' : ''}`}
+      style={style}
     >
       {children}
     </div>
@@ -301,7 +327,7 @@ function WidgetGrid({ page, pageIdx, onQuickUpdate }) {
         const C = def.Component
         return (
           <WidgetFrame key={w.id} widget={w}>
-            <C config={{ ...def.defaults, ...w.config }} size={w.size} onConfigChange={onQuickUpdate ? (c) => onQuickUpdate(pageIdx, wi, c) : null} />
+            <C config={{ ...def.defaults, ...w.config }} size={sizeOf(w)} onConfigChange={onQuickUpdate ? (c) => onQuickUpdate(pageIdx, wi, c) : null} />
           </WidgetFrame>
         )
       })}
@@ -438,7 +464,8 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
               return (
                 <div
                   key={w.id}
-                  className={`edit-slot size-${w.size || 'L'} ${dragFrom?.pageIdx === pi && dragFrom?.widgetIdx === wi ? 'dragging' : ''}`}
+                  className={`edit-slot size-${sizeOf(w)} ${dragFrom?.pageIdx === pi && dragFrom?.widgetIdx === wi ? 'dragging' : ''}`}
+                  style={{ gridColumn: `span ${spanOf(w)}` }}
                   draggable
                   onDragStart={(e) => {
                     e.dataTransfer.effectAllowed = 'move'
@@ -455,7 +482,7 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
                 >
                   <WidgetFrame widget={w} editing>
                     <div className="edit-preview" inert="">
-                      <C config={{ ...def.defaults, ...w.config }} size={w.size} />
+                      <C config={{ ...def.defaults, ...w.config }} size={sizeOf(w)} />
                     </div>
                   </WidgetFrame>
                   <div className="edit-tools">
@@ -474,16 +501,20 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
                       >
                         <i className="fa-solid fa-arrow-right" />
                       </button>
-                      {sizes.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => update((d) => (d.pages[pi].widgets[wi].size = sizes[(sizes.indexOf(w.size) + 1) % sizes.length]))}
-                          aria-label="크기 바꾸기"
-                          title="크기 바꾸기"
-                        >
-                          {w.size || 'L'}
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update((d) => {
+                            const cur = spanOf(w)
+                            const next = WIDTH_STEPS.find((x) => x.span > cur) || WIDTH_STEPS[0]
+                            d.pages[pi].widgets[wi].span = next.span
+                          })
+                        }
+                        aria-label="너비 바꾸기"
+                        title="너비 바꾸기 (누를 때마다 넓어지고, 100% 다음은 25%)"
+                      >
+                        {widthLabel(w)}
+                      </button>
                       <button type="button" onClick={() => setEditingWidget({ pageIdx: pi, widgetIdx: wi })} aria-label="설정">
                         <i className="fa-solid fa-sliders" />
                       </button>
@@ -545,18 +576,40 @@ function WidgetSettings({ widget, pageIdx, pageCount, onClose, onChange, onMoveP
     <Sheet title={`${def.label} 설정`} onClose={onClose} wide footer={<button type="button" className="btn primary block" onClick={onClose}>완료</button>}>
       {def.help && <p className="sheet-help">{def.help}</p>}
       <div className="fields">
-        {def.sizes.length > 1 && (
-          <div className="field">
-            <span className="field-label">크기</span>
-            <div className="segmented">
-              {def.sizes.map((s) => (
-                <button type="button" key={s} className={widget.size === s ? 'active' : ''} onClick={() => onChange({ ...widget, size: s })}>
-                  {s} · {SIZE_LABEL[s]}
-                </button>
-              ))}
-            </div>
+        <div className="field">
+          <span className="field-label">너비</span>
+          <div className="segmented">
+            {WIDTH_STEPS.map((x) => (
+              <button type="button" key={x.span} className={spanOf(widget) === x.span ? 'active' : ''} onClick={() => onChange({ ...widget, span: x.span })}>
+                {x.label}
+              </button>
+            ))}
           </div>
-        )}
+          <p className="field-help">한 줄은 100%예요. 같은 줄에 놓을 위젯들의 너비 합이 100%가 되면 딱 맞아요.</p>
+        </div>
+        <div className="field">
+          <span className="field-label">높이</span>
+          <div className="range-row">
+            <input
+              type="range"
+              min="0"
+              max="800"
+              step="10"
+              value={Number(widget.height) || 0}
+              onChange={(e) => onChange({ ...widget, height: Number(e.target.value) || 0 })}
+              aria-label="위젯 높이"
+            />
+            <output>{Number(widget.height) ? `${widget.height}px` : '자동'}</output>
+          </div>
+          <div className="row gap-s wrap">
+            {[0, 120, 180, 240, 320, 400].map((v) => (
+              <button type="button" key={v} className={`chip ${(Number(widget.height) || 0) === v ? 'active' : ''}`} onClick={() => onChange({ ...widget, height: v })}>
+                {v ? `${v}px` : '자동 (내용에 맞춤)'}
+              </button>
+            ))}
+          </div>
+          <p className="field-help">높이를 정하면 내용이 넘칠 때 위젯 안에서 스크롤돼요. 같은 줄 위젯들은 가장 높은 위젯에 맞춰 늘어나요.</p>
+        </div>
         {pageCount > 1 && (
           <div className="field">
             <label className="field-label" htmlFor="widget-page">

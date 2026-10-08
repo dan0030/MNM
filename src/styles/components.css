@@ -3039,3 +3039,7 @@ textarea.code,
     display: none;
   }
 }
+
+.sheet-body .fields + .fields {
+  margin-top: 18px;
+}
