@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { swapNames, useApp } from '../lib/store.jsx'
 import { loadFontsIn } from '../lib/theme.js'
 
@@ -46,14 +47,16 @@ export function Content({ html, className = 'prose', runScripts = true }) {
   return (
     <>
       <div ref={ref} className={className} onClick={onClick} />
-      {lightbox && (
+      {lightbox &&
+        createPortal(
         <div className="lightbox" onClick={() => setLightbox(null)} role="dialog" aria-label="이미지 크게 보기">
           <img src={lightbox} alt="" />
           <button type="button" className="icon-btn" aria-label="닫기">
             <i className="fa-solid fa-xmark" />
           </button>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
     </>
   )
 }

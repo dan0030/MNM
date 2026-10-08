@@ -178,6 +178,9 @@ export const DEFAULT_THEME = {
   frameOnHome: false,
   frameOpacity: 92,
   frameBar: true,
+  frameTop: 14, // 본문 창 위쪽 띄우기(px)
+  frameWidth: 0, // 본문 창 너비(px), 0이면 '본문 최대 너비'를 따라요
+  // bottomNav: 하단 탭 메뉴 (없으면 사이트 설정의 예전 값)
 
   // 마우스 커서
   cursor: 'default', // default | heart | star | paw | sparkle | custom

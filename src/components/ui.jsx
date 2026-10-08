@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 // One UI 스타일 하단 시트 (모바일에서는 아래에서 올라오고, 넓은 화면에서는 가운데 떠요)
 export function Sheet({ title, onClose, children, footer, wide = false }) {
@@ -17,7 +18,8 @@ export function Sheet({ title, onClose, children, footer, wide = false }) {
       document.body.classList.remove('no-scroll')
     }
   }, [])
-  return (
+  // body에 바로 붙여서, 유리 효과 카드나 본문 창 안에서 열어도 화면 기준으로 떠요.
+  return createPortal(
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>
         <div className="sheet-handle" />
@@ -25,7 +27,8 @@ export function Sheet({ title, onClose, children, footer, wide = false }) {
         <div className="sheet-body">{children}</div>
         {footer && <div className="sheet-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

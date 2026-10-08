@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { IMAGE_GUIDES, guideText, ratioLabel } from '../lib/imageGuides.js'
 
 // 사이트 안에서 쓰는 사진 편집기: 자르기 · 회전/뒤집기 · 크기 조정 · 밝기/대비/채도 · 저장 형식
@@ -171,7 +172,8 @@ export function ImageEditor({ src, fileName = 'image', guide, originalFile, onCa
     ...[1, 4 / 5, 4 / 3, 3 / 4, 16 / 9, 3, 5].filter((r) => !g?.ratio || Math.abs(r - g.ratio) > 0.01).map((r) => ({ value: r, label: ratioLabel(r) })),
   ]
 
-  return (
+  // body에 바로 붙여서 어디서 열어도 화면 전체를 덮어요.
+  return createPortal(
     <div className="img-editor-backdrop" onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
       <div className="img-editor" role="dialog" aria-modal="true" aria-label="사진 편집">
         <div className="img-editor-head">
@@ -365,7 +367,8 @@ export function ImageEditor({ src, fileName = 'image', guide, originalFile, onCa
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

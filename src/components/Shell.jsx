@@ -36,9 +36,16 @@ export function Shell({ children }) {
       <div className={`app nav-${nav}`}>
         {nav !== 'bottom' && <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />}
         <div className={`drawer-dim ${drawerOpen ? 'active' : ''}`} onClick={() => setDrawerOpen(false)} />
-        <TopBar title={title} collapsed={collapsed} onMenu={() => setDrawerOpen(true)} showMenu={nav !== 'bottom'} />
-        <main className="page" id="main">
-          {useFrame ? <BrowserFrame path={loc.path + loc.search} showBar={app.theme.frameBar !== false}>{children}</BrowserFrame> : children}
+        {/* 본문 창을 쓸 땐 상단바 버튼들이 창의 주소줄 안으로 들어가요. */}
+        {!useFrame && <TopBar title={title} collapsed={collapsed} onMenu={() => setDrawerOpen(true)} showMenu={nav !== 'bottom'} />}
+        <main className={`page ${useFrame ? 'framed' : ''}`} id="main">
+          {useFrame ? (
+            <BrowserFrame path={loc.path + loc.search} showUrl={app.theme.frameBar !== false} onMenu={nav !== 'bottom' ? () => setDrawerOpen(true) : null}>
+              {children}
+            </BrowserFrame>
+          ) : (
+            children
+          )}
         </main>
         <Footer />
         {nav !== 'drawer' && <BottomNav path={loc.path} />}
@@ -303,13 +310,36 @@ function Drawer({ open, onClose }) {
   )
 }
 
+export function bottomNavItems(app) {
+  const list = Array.isArray(app.theme.bottomNav) ? app.theme.bottomNav : app.site.bottomNav || []
+  return list.filter((it) => it && it.href && (!it.adminOnly || app.admin)).slice(0, 6)
+}
+
 function BottomNav({ path }) {
-  const { site } = useApp()
-  const items = site.bottomNav?.length ? site.bottomNav : []
+  const app = useApp()
+  const items = bottomNavItems(app)
+  const ref = useRef(null)
+  // 저장 바·글쓰기 바·버튼들이 하단 탭 바로 위에 뜰 수 있게 높이를 알려줘요.
+  useEffect(() => {
+    const el = ref.current
+    const root = document.documentElement
+    if (!el) {
+      root.style.removeProperty('--bottom-nav-space')
+      return
+    }
+    const update = () => root.style.setProperty('--bottom-nav-space', `${el.offsetHeight + 26}px`)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      root.style.removeProperty('--bottom-nav-space')
+    }
+  }, [items.length])
   if (!items.length) return null
   return (
-    <nav className="bottom-nav" aria-label="하단 메뉴">
-      {items.slice(0, 6).map((item, i) => {
+    <nav className="bottom-nav" aria-label="하단 메뉴" ref={ref}>
+      {items.map((item, i) => {
         const active = item.href === '/' ? path === '/' : path.startsWith(item.href)
         return (
           <a key={i} href={item.href} className={active ? 'active' : ''}>
@@ -331,8 +361,8 @@ function Footer() {
   )
 }
 
-/* One UI 인터넷 앱 느낌의 본문 창 */
-function BrowserFrame({ path, showBar, children }) {
+/* One UI 인터넷 앱 느낌의 본문 창. 주소줄에 메뉴·검색·모드·글쓰기 버튼이 함께 들어가요. */
+function BrowserFrame({ path, showUrl, onMenu, children }) {
   const app = useApp()
   const url = `${window.location.host}${decodeURIComponent(path)}`
   async function copy() {
@@ -345,23 +375,43 @@ function BrowserFrame({ path, showBar, children }) {
   }
   return (
     <div className="browser-frame">
-      {showBar && (
-        <div className="browser-bar">
-          <button type="button" className="browser-btn" onClick={() => window.history.back()} aria-label="뒤로" disabled={path === '/'}>
+      <div className={`browser-bar ${showUrl ? '' : 'no-url'}`}>
+        {onMenu ? (
+          <button type="button" className="browser-btn" onClick={onMenu} aria-label="메뉴 열기">
+            <i className="fa-solid fa-bars" />
+          </button>
+        ) : (
+          <a href="/" className="browser-btn" aria-label="홈">
+            <i className="fa-solid fa-house" />
+          </a>
+        )}
+        {showUrl && (
+          <button type="button" className="browser-btn back" onClick={() => window.history.back()} aria-label="뒤로" disabled={path === '/'}>
             <i className="fa-solid fa-arrow-left" />
           </button>
+        )}
+        {showUrl ? (
           <button type="button" className="browser-url" onClick={copy} title="주소 복사">
             <i className="fa-solid fa-lock" />
             <span>{url}</span>
           </button>
-          <a href="/" className="browser-btn" aria-label="홈">
-            <i className="fa-solid fa-house" />
+        ) : (
+          <span className="browser-spacer" />
+        )}
+        <a href="/search" className="browser-btn" aria-label="검색">
+          <i className="fa-solid fa-magnifying-glass" />
+        </a>
+        {app.theme.allowToggle !== false && (
+          <button type="button" className="browser-btn" onClick={app.toggleMode} aria-label={app.mode === 'dark' ? '라이트 모드로' : '다크 모드로'}>
+            <i className={`fa-solid ${app.mode === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
+          </button>
+        )}
+        {app.admin && (
+          <a href="/write" className="browser-btn accent" aria-label="글쓰기">
+            <i className="fa-solid fa-pen" />
           </a>
-          <span className="browser-tabs" aria-hidden="true">
-            1
-          </span>
-        </div>
-      )}
+        )}
+      </div>
       <div className="browser-body">{children}</div>
     </div>
   )

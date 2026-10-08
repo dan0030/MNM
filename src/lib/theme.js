@@ -160,6 +160,8 @@ export function applyTheme(theme, mode) {
           : `color-mix(in srgb, ${pal.bg} ${Math.max(0, Math.min(100, Number(theme.topbarOpacity ?? 82)))}%, transparent)`,
     '--topbar-blur': theme.topbarStyle === 'blur' ? 'blur(16px) saturate(1.4)' : 'none',
     '--frame-bg': `color-mix(in srgb, ${pal.bg} ${Math.max(30, Math.min(100, Number(theme.frameOpacity ?? 92)))}%, transparent)`,
+    '--frame-top': `${Number(theme.frameTop ?? 14)}px`,
+    '--frame-width': Number(theme.frameWidth) > 0 ? `${Number(theme.frameWidth)}px` : `${theme.contentWidth}px`,
     '--btn-radius': theme.buttonShape === 'pill' ? '999px' : theme.buttonShape === 'square' ? '6px' : 'var(--radius-sm)',
   }
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, String(v))

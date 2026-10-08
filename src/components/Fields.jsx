@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useId, useState } from 'react'
 import { uploadFile, pickFile } from '../lib/image.js'
 import { api } from '../lib/api.js'
 import { useApp } from '../lib/store.jsx'
@@ -44,7 +44,9 @@ export function Fields({ fields, value, onChange }) {
 }
 
 export function Field({ field: f, value, onChange }) {
-  const id = `f-${f.key.replace(/\./g, '-')}`
+  // 목록 안의 칸(예: BGM 곡 '제목')과 바깥 칸의 id가 겹치지 않게 칸마다 고유한 id를 써요.
+  const uid = useId()
+  const id = `f-${f.key.replace(/\./g, '-')}-${uid.replace(/:/g, '')}`
   if (f.type === 'toggle') {
     return (
       <div className="field">
@@ -137,6 +139,8 @@ function FieldInput({ id, f, value, onChange }) {
       return <CategorySelect id={id} value={value} onChange={onChange} />
     case 'list':
       return <ListInput f={f} value={value} onChange={onChange} />
+    case 'navItems':
+      return <NavItemsInput value={value} onChange={onChange} />
     default:
       return <input id={id} type="text" value={value ?? ''} placeholder={f.placeholder} onChange={(e) => onChange(e.target.value)} />
   }
@@ -359,6 +363,126 @@ function ListInput({ f, value, onChange }) {
       ))}
       <button type="button" className="btn small" onClick={() => onChange([...items, { ...(f.newItem || {}) }])}>
         <i className="fa-solid fa-plus" /> {f.itemLabel || '항목'} 추가
+      </button>
+    </div>
+  )
+}
+
+/* ---------------- 하단 탭 메뉴 고르기 ---------------- */
+
+const NAV_PRESETS = [
+  { label: '홈', icon: 'fa-solid fa-house', href: '/' },
+  { label: '기록', icon: 'fa-solid fa-book-open', href: '/archive' },
+  { label: '캘린더', icon: 'fa-regular fa-calendar', href: '/calendar' },
+  { label: '방명록', icon: 'fa-regular fa-comment-dots', href: '/guestbook' },
+  { label: '태그', icon: 'fa-solid fa-hashtag', href: '/tags' },
+  { label: '공지', icon: 'fa-solid fa-bullhorn', href: '/notice' },
+  { label: '배너', icon: 'fa-solid fa-flag', href: '/banners' },
+  { label: '검색', icon: 'fa-solid fa-magnifying-glass', href: '/search' },
+  { label: '글쓰기', icon: 'fa-solid fa-pen', href: '/write', adminOnly: true },
+  { label: '관리', icon: 'fa-solid fa-gear', href: '/admin', adminOnly: true },
+]
+
+export function NavItemsInput({ value, onChange }) {
+  const { site, categories } = useApp()
+  const items = Array.isArray(value) ? value : site.bottomNav || []
+  const [custom, setCustom] = useState(false)
+  const full = items.length >= 6
+  const set = (next) => onChange(next)
+  const update = (i, patch) => set(items.map((it, j) => (j === i ? { ...it, ...patch } : it)))
+  const move = (i, d) => {
+    const j = i + d
+    if (j < 0 || j >= items.length) return
+    const next = [...items]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    set(next)
+  }
+  const presets = [
+    ...NAV_PRESETS,
+    ...categories.map((c) => ({ label: c.name, icon: c.icon || 'fa-solid fa-folder', href: `/category/${c.slug}` })),
+  ].filter((p) => !items.some((it) => it.href === p.href))
+
+  return (
+    <div className="nav-items">
+      <div className="nav-preview" aria-hidden="true">
+        {items.slice(0, 6).map((it, i) => (
+          <span key={i} className={i === 0 ? 'active' : ''}>
+            <i className={it.icon || 'fa-solid fa-circle'} />
+            <small>{it.label}</small>
+          </span>
+        ))}
+        {!items.length && <small className="muted">탭이 없어요</small>}
+      </div>
+      <div className="nav-rows">
+        {items.map((it, i) => (
+          <div className="nav-row" key={i}>
+            <span className="nav-row-icon">
+              <i className={it.icon || 'fa-solid fa-circle'} />
+            </span>
+            <input value={it.label || ''} onChange={(e) => update(i, { label: e.target.value })} aria-label="탭 이름" />
+            <input className="nav-row-href" value={it.href || ''} onChange={(e) => update(i, { href: e.target.value })} aria-label="주소" />
+            <label className="check nav-row-admin" title="로그인했을 때만 보이기">
+              <input type="checkbox" checked={!!it.adminOnly} onChange={(e) => update(i, { adminOnly: e.target.checked })} />
+              <span>
+                <i className="fa-solid fa-lock" />
+              </span>
+            </label>
+            <div className="row gap-xs">
+              <button type="button" className="icon-btn small" onClick={() => move(i, -1)} disabled={i === 0} aria-label="앞으로">
+                <i className="fa-solid fa-arrow-up" />
+              </button>
+              <button type="button" className="icon-btn small" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label="뒤로">
+                <i className="fa-solid fa-arrow-down" />
+              </button>
+              <button type="button" className="icon-btn small danger" onClick={() => set(items.filter((_, j) => j !== i))} aria-label="빼기">
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="field-help">
+        {full ? '탭은 6개까지 넣을 수 있어요. 하나를 빼야 더 넣을 수 있어요.' : `눌러서 추가해요 (${items.length}/6). 자물쇠를 켜면 로그인했을 때만 보여요.`}
+      </p>
+      {!full && (
+        <div className="nav-presets">
+          {presets.map((p) => (
+            <button type="button" key={p.href} className="chip" onClick={() => set([...items, p])}>
+              <i className={p.icon} /> {p.label}
+            </button>
+          ))}
+          <button type="button" className="chip" onClick={() => setCustom((v) => !v)}>
+            <i className="fa-solid fa-plus" /> 직접 만들기
+          </button>
+        </div>
+      )}
+      {custom && !full && (
+        <CustomNavForm
+          onAdd={(it) => {
+            set([...items, it])
+            setCustom(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function CustomNavForm({ onAdd }) {
+  const [it, setIt] = useState({ label: '', href: '', icon: 'fa-solid fa-star' })
+  return (
+    <div className="list-input-item">
+      <Fields
+        fields={[
+          { key: 'label', label: '이름' },
+          { key: 'href', label: '주소', placeholder: '/category/... 또는 https://...' },
+          { key: 'icon', label: '아이콘', type: 'icon' },
+        ]}
+        value={it}
+        onChange={setIt}
+      />
+      <button type="button" className="btn small primary" disabled={!it.label || !it.href} onClick={() => onAdd(it)} style={{ marginTop: 12 }}>
+        추가
       </button>
     </div>
   )

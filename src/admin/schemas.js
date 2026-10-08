@@ -32,17 +32,6 @@ export const SITE_FIELDS = [
   { key: 'menu.calendar', label: '캘린더 아이콘', type: 'toggle' },
   { key: 'menu.banners', label: '배너 아이콘', type: 'toggle' },
   {
-    key: 'bottomNav',
-    label: '하단 탭 메뉴 (디자인 > 배치에서 하단 탭을 켜면 보여요)',
-    type: 'list',
-    itemLabel: '탭',
-    itemFields: [
-      { key: 'label', label: '이름' },
-      { key: 'href', label: '주소', placeholder: '/archive' },
-      { key: 'icon', label: '아이콘', type: 'icon' },
-    ],
-  },
-  {
     key: 'links',
     label: '외부 링크',
     type: 'list',
@@ -246,7 +235,9 @@ export const DESIGN_SECTIONS = [
         help: '사이트 배경 위에 글자가 잘 보이도록 본문을 브라우저 창 모양 판 위에 올려요.',
       },
       { key: 'frameOpacity', label: '본문 창 진하기', type: 'range', min: 30, max: 100, unit: '%', show: (t) => t.contentFrame !== 'never' },
-      { key: 'frameBar', label: '본문 창 위쪽 주소창 보이기', type: 'toggle', show: (t) => t.contentFrame !== 'never' },
+      { key: 'frameBar', label: '본문 창 주소창 보이기 (끄면 버튼만 남아요)', type: 'toggle', show: (t) => t.contentFrame !== 'never' },
+      { key: 'frameTop', label: '본문 창 위쪽 띄우기', type: 'range', min: 0, max: 120, unit: 'px', show: (t) => t.contentFrame !== 'never' },
+      { key: 'frameWidth', label: '본문 창 너비 (0이면 모양 › 본문 최대 너비를 따라요)', type: 'range', min: 0, max: 1400, step: 10, unit: 'px', show: (t) => t.contentFrame !== 'never' },
       { key: 'frameOnHome', label: '홈 화면에도 본문 창 쓰기', type: 'toggle', show: (t) => t.contentFrame !== 'never' },
       {
         key: 'navStyle',
@@ -258,6 +249,7 @@ export const DESIGN_SECTIONS = [
           { value: 'both', label: '둘 다' },
         ],
       },
+      { key: 'bottomNav', label: '하단 탭 메뉴', type: 'navItems', show: (t) => t.navStyle !== 'drawer' },
       { key: 'drawerSide', label: '서랍 위치', type: 'segmented', options: [{ value: 'left', label: '왼쪽' }, { value: 'right', label: '오른쪽' }], show: (t) => t.navStyle !== 'bottom' },
       { key: 'homeLayout', label: '홈 화면 페이지', type: 'segmented', options: [{ value: 'swipe', label: '옆으로 넘기기' }, { value: 'stack', label: '아래로 이어보기' }] },
       {

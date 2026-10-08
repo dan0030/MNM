@@ -1573,7 +1573,7 @@ a.cal-day:hover {
 }
 .nav-bottom .bgm-video,
 .nav-both .bgm-video {
-  bottom: 92px;
+  bottom: var(--bottom-nav-space, 92px);
 }
 .bgm-video-head {
   display: flex;

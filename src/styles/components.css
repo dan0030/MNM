@@ -1413,9 +1413,23 @@ textarea.code,
   color: var(--accent);
   font-weight: 600;
 }
+/* 하단 탭이 있을 때: 저장 바는 탭 바로 위에 떠 있다가, 바꾼 게 있을 때만 나타나요. */
 .nav-bottom .save-bar,
 .nav-both .save-bar {
-  bottom: 96px;
+  position: fixed;
+  left: 50%;
+  bottom: var(--bottom-nav-space, 96px);
+  z-index: 65;
+  width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  transform: translateX(-50%);
+  transition: transform 0.3s var(--ease), opacity 0.25s;
+}
+.nav-bottom .save-bar:not(.show),
+.nav-both .save-bar:not(.show) {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 16px);
 }
 
 .design-tabs {
@@ -1753,7 +1767,7 @@ textarea.code,
 }
 .nav-bottom .write-bar,
 .nav-both .write-bar {
-  bottom: 96px;
+  bottom: var(--bottom-nav-space, 96px);
 }
 
 .rich-editor {
@@ -2940,5 +2954,88 @@ textarea.code,
 @media (min-width: 700px) {
   .album-grid {
     grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ---------------- 하단 탭 메뉴 고르기 ---------------- */
+
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav-preview {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  align-self: center;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  max-width: 100%;
+  overflow: hidden;
+}
+.nav-preview span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 52px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  color: var(--text-sub);
+}
+.nav-preview span.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.nav-preview small {
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+.nav-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nav-row {
+  display: grid;
+  grid-template-columns: 34px minmax(70px, 1fr) minmax(80px, 1.3fr) auto auto;
+  align-items: center;
+  gap: 6px;
+}
+.nav-row input {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+.nav-row-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+.nav-row-admin {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+.nav-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nav-presets .chip {
+  cursor: pointer;
+}
+@media (max-width: 560px) {
+  .nav-row {
+    grid-template-columns: 34px 1fr auto auto;
+  }
+  .nav-row-href {
+    display: none;
   }
 }
