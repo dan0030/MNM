@@ -301,6 +301,14 @@ export default function Write({ id }) {
             />
           </div>
           <div className="field">
+            <Switch
+              checked={!post.extra.hideExcerpt}
+              onChange={(v) => setExtra({ hideExcerpt: !v })}
+              label="목록에 요약(미리보기) 보이기"
+              description="끄면 목록·카드·메모 등에서 제목만 보여요."
+            />
+          </div>
+          <div className="field">
             <Switch checked={post.pinned} onChange={(v) => set({ pinned: v })} label="목록 맨 위에 고정" />
           </div>
           <div className="field">

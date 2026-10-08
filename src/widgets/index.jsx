@@ -74,7 +74,7 @@ function ProfileWidget({ config }) {
         <Avatar who={mode === 'partner' ? pair.partner : pair.me} />
         {mode === 'pair' && (
           <>
-            <span className="profile-symbol">
+            <span className="profile-symbol" style={{ color: pair.symbolColor || undefined, background: pair.symbolBg || undefined }}>
               <i className={pair.symbol || 'fa-solid fa-heart'} />
             </span>
             <Avatar who={pair.partner} />

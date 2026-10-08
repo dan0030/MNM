@@ -20,6 +20,8 @@ export const DEFAULT_SITE = {
   ],
   bgm: [],
   bgmLabel: 'Now playing',
+  bgmPreload: true,
+  bgmAutoplay: false,
   menu: { archive: true, calendar: true, notice: true, guestbook: true, tags: true, banners: true },
   banners: [],
   myBanner: { image: '', url: '', alt: '', note: '' },

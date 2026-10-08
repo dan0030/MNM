@@ -488,6 +488,7 @@ function shapeListItem(row, admin) {
     views: row.views,
     reactions: parseJson(row.reactions, {}),
     subtitle: extra.subtitle || '',
+    hideExcerpt: !!extra.hideExcerpt,
     commentCount: row.comment_count || 0,
     replyCount: row.reply_count || 0,
     author: extra.author || 'me',

@@ -11,6 +11,8 @@ export const SITE_FIELDS = [
   { key: 'pair.pairName', label: '페어 이름', placeholder: '나 × 최애' },
   { key: 'pair.bio', label: '소개글', type: 'textarea', rows: 2 },
   { key: 'pair.symbol', label: '두 사람 사이 아이콘', type: 'icon' },
+  { key: 'pair.symbolColor', label: '두 사람 사이 아이콘 색 (비우면 포인트 색)', type: 'color' },
+  { key: 'pair.symbolBg', label: '두 사람 사이 아이콘 바탕색 (비우면 카드 색)', type: 'color' },
   { key: 'pair.startDate', label: '시작일 (사귄 날 · 드림 시작일)', type: 'date' },
   { key: 'pair.startLabel', label: '시작일 문구', placeholder: '함께한 지' },
   { key: 'pair.me.name', label: '나 — 이름' },
@@ -54,6 +56,13 @@ export const SITE_FIELDS = [
 
   { type: 'heading', label: 'BGM', help: '유튜브 주소를 넣으면 서랍 메뉴와 BGM 위젯에서 재생돼요.' },
   { key: 'bgmLabel', label: '재생 중 문구', placeholder: 'Now playing' },
+  { key: 'bgmPreload', label: '접속하면 BGM 미리 준비하기', type: 'toggle', help: '소리는 나지 않고, 재생 버튼을 누르면 바로 시작돼요.' },
+  {
+    key: 'bgmAutoplay',
+    label: '첫 클릭·터치 때 BGM 자동 재생',
+    type: 'toggle',
+    help: '브라우저 규칙상 방문자가 한 번 누르기 전에는 소리를 낼 수 없어서, 처음 누를 때 시작해요. 유튜브 프리미엄으로 다른 탭에서 음악을 듣는 사람은 이 사이트 재생이 시작되면 그쪽이 멈출 수 있어서 기본은 꺼둬요.',
+  },
   {
     key: 'bgm',
     label: '곡 목록',

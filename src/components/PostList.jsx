@@ -9,7 +9,9 @@ export function PostList({ items, style = 'list', compact = false }) {
   const showExcerpt = theme.showExcerpt !== false
   const catName = (id) => categories.find((c) => c.id === id)?.name
 
-  const excerptOf = (p) => (p.locked ? '보호되어 있는 글입니다.' : swapNames(p.excerpt, site))
+  // 글마다 '목록에 요약 보이기'를 끌 수 있어요. (끈 글은 요약 없이 제목만)
+  const wantExcerpt = (p) => showExcerpt && !p.hideExcerpt
+  const excerptOf = (p) => (p.locked ? '보호되어 있는 글입니다.' : p.hideExcerpt ? '' : swapNames(p.excerpt, site))
   const thumbOf = (p) => (showThumbs && p.thumbnail && !p.locked ? p.thumbnail : null)
 
   if (style === 'masonry') return <MasonryList items={items} thumbOf={thumbOf} excerptOf={excerptOf} compact={compact} />
@@ -33,7 +35,7 @@ export function PostList({ items, style = 'list', compact = false }) {
                 <span>
                   {formatDate(p.publishedAt)}
                   {p.commentCount > 0 && ` · 댓글 ${p.commentCount}`}
-                  {!compact && showExcerpt && p.excerpt && !p.locked ? ` · ${swapNames(p.excerpt, site)}` : ''}
+                  {!compact && wantExcerpt(p) && p.excerpt && !p.locked ? ` · ${swapNames(p.excerpt, site)}` : ''}
                 </span>
               </span>
               <i className="fa-solid fa-chevron-right group-chevron" />
@@ -61,7 +63,7 @@ export function PostList({ items, style = 'list', compact = false }) {
               {first.locked && <i className="fa-solid fa-lock lock-icon" />}
               {first.title || '(제목 없음)'}
             </strong>
-            {showExcerpt && <span className="magazine-excerpt">{excerptOf(first)}</span>}
+            {wantExcerpt(first) && <span className="magazine-excerpt">{excerptOf(first)}</span>}
             <span className="magazine-date">{formatDate(first.publishedAt)}</span>
           </span>
         </a>
@@ -89,7 +91,7 @@ export function PostList({ items, style = 'list', compact = false }) {
                     {p.locked && <i className="fa-solid fa-lock lock-icon" />}
                     {p.title || '(제목 없음)'}
                   </strong>
-                  {showExcerpt && p.excerpt && <span className="timeline-excerpt">{swapNames(p.excerpt, site)}</span>}
+                  {wantExcerpt(p) && p.excerpt && <span className="timeline-excerpt">{swapNames(p.excerpt, site)}</span>}
                 </span>
               </a>
             </React.Fragment>
@@ -122,8 +124,8 @@ export function PostList({ items, style = 'list', compact = false }) {
                 {p.title || '(제목 없음)'}
               </strong>
               {p.subtitle && style !== 'gallery' && <span className="post-subtitle">{p.subtitle}</span>}
-              {(style === 'memo' || style === 'card' || (style === 'list' && showExcerpt && !compact)) && (
-                <p className="post-excerpt">{p.locked ? '보호되어 있는 글입니다.' : swapNames(p.excerpt, site)}</p>
+              {(p.locked || !p.hideExcerpt) && (style === 'memo' || style === 'card' || (style === 'list' && showExcerpt && !compact)) && (
+                <p className="post-excerpt">{excerptOf(p)}</p>
               )}
               <span className="post-meta">
                 <span>{formatDate(p.publishedAt)}</span>
@@ -212,7 +214,7 @@ function MasonryList({ items, thumbOf, excerptOf, compact }) {
                 ) : (
                   <span className="masonry-text">
                     <i className={p.locked ? 'fa-solid fa-lock' : 'fa-solid fa-quote-left'} />
-                    {!compact && <span>{excerptOf(p)}</span>}
+                    {!compact && excerptOf(p) && <span>{excerptOf(p)}</span>}
                   </span>
                 )}
                 <span className="masonry-caption">

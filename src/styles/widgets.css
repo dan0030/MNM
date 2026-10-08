@@ -1547,3 +1547,79 @@ a.cal-day:hover {
     margin: 0 -6px 22px;
   }
 }
+
+/* ---------------- BGM 영상 (펼치는 유튜브 플레이어) ---------------- */
+
+.bgm-video {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1200;
+  width: min(360px, calc(100vw - 32px));
+  padding: 8px 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  transform: translateX(calc(100% + 60px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s var(--ease), opacity 0.25s;
+}
+.bgm-video.open {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav-bottom .bgm-video,
+.nav-both .bgm-video {
+  bottom: 92px;
+}
+.bgm-video-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 8px 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.bgm-video-head span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bgm-video-head i.fa-youtube {
+  color: #ff0033;
+  margin-right: 4px;
+}
+.bgm-video-head button {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+.bgm-video-frame {
+  aspect-ratio: 16 / 9;
+  border-radius: calc(var(--radius) - 10px);
+  overflow: hidden;
+  background: #000;
+}
+.bgm-video-frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.bgm-video-help {
+  margin: 8px 6px 0;
+  font-size: 0.74rem;
+  color: var(--text-sub);
+}
+.bgm-controls .bgm-video-toggle.active {
+  color: #ff0033;
+  opacity: 1;
+}
