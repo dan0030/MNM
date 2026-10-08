@@ -1882,3 +1882,13 @@ a.cal-day:hover {
     padding-right: 430px;
   }
 }
+
+/* 홈 위젯 안쪽(높이를 정한 위젯, 목록·플레이리스트 등)은 스크롤바 없이 그냥 넘겨져요 */
+.home .widget,
+.home .widget * {
+  scrollbar-width: none;
+}
+.home .widget::-webkit-scrollbar,
+.home .widget *::-webkit-scrollbar {
+  display: none;
+}
