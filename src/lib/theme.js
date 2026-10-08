@@ -152,6 +152,14 @@ export function applyTheme(theme, mode) {
     '--content-width': `${theme.contentWidth}px`,
     '--expanded-height': `${theme.expandedHeight}vh`,
     '--gallery-cols': theme.galleryColumns,
+    '--topbar-bg':
+      theme.topbarStyle === 'transparent'
+        ? 'transparent'
+        : theme.topbarStyle === 'solid'
+          ? pal.bg
+          : `color-mix(in srgb, ${pal.bg} ${Math.max(0, Math.min(100, Number(theme.topbarOpacity ?? 82)))}%, transparent)`,
+    '--topbar-blur': theme.topbarStyle === 'blur' ? 'blur(16px) saturate(1.4)' : 'none',
+    '--frame-bg': `color-mix(in srgb, ${pal.bg} ${Math.max(30, Math.min(100, Number(theme.frameOpacity ?? 92)))}%, transparent)`,
     '--btn-radius': theme.buttonShape === 'pill' ? '999px' : theme.buttonShape === 'square' ? '6px' : 'var(--radius-sm)',
   }
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, String(v))

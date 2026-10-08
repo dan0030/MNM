@@ -6,16 +6,8 @@ import { formatDate } from '../lib/format.js'
 import { LargeTitle } from '../components/Shell.jsx'
 import { PostList } from '../components/PostList.jsx'
 import { Empty, Paging, Spinner } from '../components/ui.jsx'
-import { LIST_STYLES } from '../lib/defaults.js'
 import { ThreadFeed } from '../components/Thread.jsx'
 
-const STYLE_ICONS = {
-  list: 'fa-solid fa-list',
-  gallery: 'fa-solid fa-table-cells',
-  memo: 'fa-regular fa-note-sticky',
-  card: 'fa-regular fa-rectangle-list',
-  timeline: 'fa-solid fa-timeline',
-}
 
 // 전체 / 카테고리 / 태그 / 검색 / 공지 목록을 모두 이 화면이 그려요.
 export default function Archive({ kind, param, search }) {
@@ -29,16 +21,8 @@ export default function Archive({ kind, param, search }) {
   const [query, setQuery] = useState(q)
   const category = kind === 'category' ? app.categories.find((c) => c.slug === param) : null
   const isThread = category?.page_type === 'thread' && !date
-  const scopeKey = `od-view-${kind}-${param || ''}`
-  const baseStyle = category?.list_style || app.theme.listStyle
-  const [viewStyle, setViewStyle] = useState(() => {
-    try {
-      return sessionStorage.getItem(scopeKey) || null
-    } catch {
-      return null
-    }
-  })
-  const style = kind === 'notice' && !viewStyle ? 'list' : viewStyle || baseStyle
+  // 목록 모양은 관리자가 정한 것 하나로만 보여줘요. (카테고리 설정 > 디자인 › 목록 기본값)
+  const style = kind === 'notice' ? app.theme.noticeStyle || 'list' : category?.list_style || app.theme.listStyle
 
   useEffect(() => {
     setQuery(q)
@@ -89,14 +73,6 @@ export default function Archive({ kind, param, search }) {
     navigate(`${window.location.pathname}?${next.toString()}`)
   }
 
-  function chooseStyle(s) {
-    setViewStyle(s)
-    try {
-      sessionStorage.setItem(scopeKey, s)
-    } catch {
-      // 무시
-    }
-  }
 
   const subCats = category ? app.categories.filter((c) => c.parent_id === category.id) : []
 
@@ -137,13 +113,6 @@ export default function Archive({ kind, param, search }) {
         <>
       <div className="list-toolbar">
         <span className="list-count">{data ? `${data.total}개` : ''}</span>
-        <div className="view-switch" role="radiogroup" aria-label="목록 모양">
-          {LIST_STYLES.map((s) => (
-            <button type="button" key={s.value} role="radio" aria-checked={style === s.value} className={style === s.value ? 'active' : ''} onClick={() => chooseStyle(s.value)} title={s.label} aria-label={s.label}>
-              <i className={STYLE_ICONS[s.value]} />
-            </button>
-          ))}
-        </div>
       </div>
 
       {error ? (

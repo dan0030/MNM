@@ -200,6 +200,31 @@ export const DESIGN_SECTIONS = [
       { key: 'expandedHeight', label: '큰 제목 영역 높이', type: 'range', min: 12, max: 50, unit: 'vh', show: (t) => t.headerStyle !== 'compact' },
       { key: 'homeTitle', label: '홈에도 사이트 이름 큰 제목 보이기', type: 'toggle' },
       {
+        key: 'topbarStyle',
+        label: '상단바 배경',
+        type: 'segmented',
+        options: [
+          { value: 'blur', label: '반투명 흐림' },
+          { value: 'solid', label: '불투명' },
+          { value: 'transparent', label: '투명' },
+        ],
+      },
+      { key: 'topbarOpacity', label: '상단바 배경 진하기', type: 'range', min: 0, max: 100, unit: '%', show: (t) => t.topbarStyle === 'blur' },
+      {
+        key: 'contentFrame',
+        label: '본문 창 (인터넷 창 모양 배경)',
+        type: 'segmented',
+        options: [
+          { value: 'auto', label: '배경이 사진·패턴일 때만' },
+          { value: 'always', label: '항상' },
+          { value: 'never', label: '안 씀' },
+        ],
+        help: '사이트 배경 위에 글자가 잘 보이도록 본문을 브라우저 창 모양 판 위에 올려요.',
+      },
+      { key: 'frameOpacity', label: '본문 창 진하기', type: 'range', min: 30, max: 100, unit: '%', show: (t) => t.contentFrame !== 'never' },
+      { key: 'frameBar', label: '본문 창 위쪽 주소창 보이기', type: 'toggle', show: (t) => t.contentFrame !== 'never' },
+      { key: 'frameOnHome', label: '홈 화면에도 본문 창 쓰기', type: 'toggle', show: (t) => t.contentFrame !== 'never' },
+      {
         key: 'navStyle',
         label: '메뉴',
         type: 'segmented',
@@ -232,7 +257,8 @@ export const DESIGN_SECTIONS = [
     label: '목록',
     icon: 'fa-solid fa-list',
     fields: [
-      { key: 'listStyle', label: '기본 목록 모양 (카테고리별로 따로 정할 수도 있어요)', type: 'select', options: LIST_STYLES },
+      { key: 'listStyle', label: '기본 목록 모양 (카테고리별로 따로 정할 수도 있어요)', type: 'select', options: LIST_STYLES, help: '방문자는 목록 모양을 바꿀 수 없고, 여기서 정한 모양으로만 보여요.' },
+      { key: 'noticeStyle', label: '공지사항 목록 모양', type: 'select', options: LIST_STYLES },
       { key: 'galleryColumns', label: '갤러리 열 수', type: 'range', min: 2, max: 5 },
       { key: 'showThumbs', label: '썸네일 보이기', type: 'toggle' },
       { key: 'showExcerpt', label: '요약 보이기', type: 'toggle' },

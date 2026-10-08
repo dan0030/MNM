@@ -14,6 +14,10 @@ export function Shell({ children }) {
   const [title, setTitle] = useState('')
   const [collapsed, setCollapsed] = useState(true)
   const nav = app.theme.navStyle
+  // 배경이 사진·패턴이면 본문을 브라우저 창 모양 판 위에 올려서 글자가 잘 보이게 해요.
+  const t = app.theme
+  const busyBg = t.bgType === 'image' || t.bgType === 'pattern'
+  const useFrame = (t.contentFrame === 'always' || (t.contentFrame !== 'never' && busyBg)) && (loc.path !== '/' || t.frameOnHome)
 
   useEffect(() => {
     setDrawerOpen(false)
@@ -34,7 +38,7 @@ export function Shell({ children }) {
         <div className={`drawer-dim ${drawerOpen ? 'active' : ''}`} onClick={() => setDrawerOpen(false)} />
         <TopBar title={title} collapsed={collapsed} onMenu={() => setDrawerOpen(true)} showMenu={nav !== 'bottom'} />
         <main className="page" id="main">
-          {children}
+          {useFrame ? <BrowserFrame path={loc.path + loc.search} showBar={app.theme.frameBar !== false}>{children}</BrowserFrame> : children}
         </main>
         <Footer />
         {nav !== 'drawer' && <BottomNav path={loc.path} />}
@@ -324,5 +328,41 @@ function Footer() {
     <footer className="site-footer">
       <span>{site.footer || 'ODAN DREAMPAIR'}</span>
     </footer>
+  )
+}
+
+/* One UI 인터넷 앱 느낌의 본문 창 */
+function BrowserFrame({ path, showBar, children }) {
+  const app = useApp()
+  const url = `${window.location.host}${decodeURIComponent(path)}`
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      app.showToast('주소를 복사했어요.')
+    } catch {
+      window.prompt('주소', window.location.href)
+    }
+  }
+  return (
+    <div className="browser-frame">
+      {showBar && (
+        <div className="browser-bar">
+          <button type="button" className="browser-btn" onClick={() => window.history.back()} aria-label="뒤로" disabled={path === '/'}>
+            <i className="fa-solid fa-arrow-left" />
+          </button>
+          <button type="button" className="browser-url" onClick={copy} title="주소 복사">
+            <i className="fa-solid fa-lock" />
+            <span>{url}</span>
+          </button>
+          <a href="/" className="browser-btn" aria-label="홈">
+            <i className="fa-solid fa-house" />
+          </a>
+          <span className="browser-tabs" aria-hidden="true">
+            1
+          </span>
+        </div>
+      )}
+      <div className="browser-body">{children}</div>
+    </div>
   )
 }

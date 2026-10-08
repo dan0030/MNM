@@ -422,7 +422,7 @@ async function saveCategories(db, list) {
     slug: uniqueSlug(c.slug || c.name),
     icon: clampStr(c.icon, 60),
     description: clampStr(c.description, 200),
-    list_style: ['list', 'gallery', 'memo', 'card', 'timeline'].includes(c.list_style) ? c.list_style : null,
+    list_style: ['list', 'group', 'card', 'magazine', 'gallery', 'masonry', 'album', 'memo', 'timeline'].includes(c.list_style) ? c.list_style : null,
     page_type: PAGE_TYPES.includes(c.page_type) ? c.page_type : 'posts',
     parentKey: c.parentKey != null ? String(c.parentKey) : c.parent_id != null ? String(c.parent_id) : null,
     sort_order: i,

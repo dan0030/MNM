@@ -155,7 +155,8 @@ export const DEFAULT_THEME = {
   dotsPosition: 'bottom',
 
   // 목록
-  listStyle: 'list', // list | gallery | memo | card | timeline
+  listStyle: 'list', // LIST_STYLES 참고
+  noticeStyle: 'list',
   galleryColumns: 3,
   showThumbs: true,
   showExcerpt: true,
@@ -164,6 +165,14 @@ export const DEFAULT_THEME = {
   animations: true,
   hoverLift: true,
   iconStyle: 'solid',
+
+  // 상단바 · 본문 창
+  topbarStyle: 'blur', // blur(반투명 흐림) | solid(불투명) | transparent(투명)
+  topbarOpacity: 82,
+  contentFrame: 'auto', // auto(배경이 이미지·패턴일 때) | always | never
+  frameOnHome: false,
+  frameOpacity: 92,
+  frameBar: true,
 
   // 마우스 커서
   cursor: 'default', // default | heart | star | paw | sparkle | custom
@@ -360,9 +369,13 @@ export const PAGE_TYPES = [
 
 export const LIST_STYLES = [
   { value: 'list', label: '리스트' },
-  { value: 'gallery', label: '갤러리' },
-  { value: 'memo', label: '메모' },
+  { value: 'group', label: 'One UI 설정 목록 (한 카드에 줄로 묶기)' },
   { value: 'card', label: '카드' },
+  { value: 'magazine', label: '매거진 (첫 글 크게)' },
+  { value: 'gallery', label: '갤러리 (정사각 격자)' },
+  { value: 'masonry', label: '벽돌 갤러리 (사진 원래 비율대로 쌓기)' },
+  { value: 'album', label: '앨범 (갤러리 앱처럼 달별로)' },
+  { value: 'memo', label: '메모' },
   { value: 'timeline', label: '타임라인' },
 ]
 
