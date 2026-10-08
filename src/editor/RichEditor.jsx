@@ -123,6 +123,7 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
           ul: document.queryCommandState('insertUnorderedList'),
           ol: document.queryCommandState('insertOrderedList'),
           block: String(document.queryCommandValue('formatBlock') || 'p').toLowerCase(),
+          align: document.queryCommandState('justifyCenter') ? 'center' : document.queryCommandState('justifyRight') ? 'right' : document.queryCommandState('justifyFull') ? 'full' : 'left',
         })
       }
     }
@@ -322,134 +323,205 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
     </button>
   )
 
+  const toggleMenu = (name) => setMenu((m) => (m === name ? null : name))
+  // 메뉴 안 버튼: 글자 선택이 풀리지 않게 mousedown을 막아요.
+  const MI = ({ icon, label, onClick, active, keep, children }) => (
+    <button
+      type="button"
+      className={active ? 'active' : ''}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => {
+        onClick()
+        if (!keep) setMenu(null)
+      }}
+    >
+      {icon && <i className={icon} />} {children || label}
+    </button>
+  )
+  const MenuBtn = ({ name, icon, label, current }) => (
+    <button
+      type="button"
+      className={`tb-btn tb-menu-btn ${menu === name ? 'active' : ''}`}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => toggleMenu(name)}
+      aria-expanded={menu === name}
+      title={label}
+    >
+      <i className={current || icon} />
+      <span className="tb-text">{label}</span>
+      <i className="fa-solid fa-chevron-down tb-caret" />
+    </button>
+  )
+  const alignIcon = { left: 'fa-solid fa-align-left', center: 'fa-solid fa-align-center', right: 'fa-solid fa-align-right', full: 'fa-solid fa-align-justify' }[state.align || 'left']
+
+  const modeToggle = (
+    <button
+      type="button"
+      className={`tb-btn tb-mode-btn ${mode === 'html' ? 'active' : ''}`}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => {
+        lastHtml.current = null
+        setMenu(null)
+        onModeChange(mode === 'html' ? 'rich' : 'html')
+      }}
+      title={mode === 'html' ? '에디터로 돌아가기' : 'HTML로 직접 고치기'}
+      aria-pressed={mode === 'html'}
+    >
+      <i className="fa-solid fa-code" />
+      <span className="tb-text">{mode === 'html' ? '에디터로' : 'HTML'}</span>
+    </button>
+  )
+
   return (
     <div className={`rich-editor mode-${mode}`}>
       <div className="toolbar" role="toolbar" aria-label="글 서식">
-        <div className="tb-mode segmented small">
-          <button type="button" className={mode === 'rich' ? 'active' : ''} onClick={() => {
-              lastHtml.current = null
-              onModeChange('rich')
-            }}>
-            에디터
-          </button>
-          <button type="button" className={mode === 'html' ? 'active' : ''} onClick={() => {
-              lastHtml.current = null
-              onModeChange('html')
-            }}>
-            HTML
-          </button>
-        </div>
-        {mode === 'rich' && (
-          <>
-            <span className="tb-sep" />
-            <Btn icon="fa-solid fa-rotate-left" label="실행 취소" onClick={() => exec('undo')} />
-            <Btn icon="fa-solid fa-rotate-right" label="다시 실행" onClick={() => exec('redo')} />
-            <span className="tb-sep" />
-            <select className="tb-select" value={BLOCKS.some((b) => b.value === state.block) ? state.block : 'p'} onChange={(e) => exec('formatBlock', e.target.value)} aria-label="문단 모양">
-              {BLOCKS.map((b) => (
-                <option key={b.value} value={b.value}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="tb-select"
-              value=""
-              onChange={(e) => {
-                const font = FONTS.find((f) => f.key === e.target.value)
-                if (!font) return
-                loadFontByKey(font.key)
-                exec('fontName', font.family.split(',')[0].replace(/['"]/g, '').trim())
-              }}
-              aria-label="글꼴"
-            >
-              <option value="">글꼴</option>
-              {FONTS.filter((f) => f.key !== 'custom' && f.key !== 'system').map((f) => (
-                <option key={f.key} value={f.key}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-            <select className="tb-select" value="" onChange={(e) => e.target.value && exec('fontSize', e.target.value)} aria-label="글자 크기">
-              <option value="">크기</option>
-              {SIZES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <span className="tb-sep" />
-            <Btn icon="fa-solid fa-bold" label="굵게" active={state.bold} onClick={() => exec('bold')} />
-            <Btn icon="fa-solid fa-italic" label="기울임" active={state.italic} onClick={() => exec('italic')} />
-            <Btn icon="fa-solid fa-underline" label="밑줄" active={state.underline} onClick={() => exec('underline')} />
-            <Btn icon="fa-solid fa-strikethrough" label="취소선" active={state.strikeThrough} onClick={() => exec('strikeThrough')} />
-            <label className="tb-btn tb-color" title="글자색" onMouseDown={() => restore()}>
-              <i className="fa-solid fa-font" />
-              <input type="color" onChange={(e) => exec('foreColor', e.target.value)} aria-label="글자색" />
-            </label>
-            <label className="tb-btn tb-color" title="형광펜" onMouseDown={() => restore()}>
-              <i className="fa-solid fa-highlighter" />
-              <input type="color" defaultValue="#fff59d" onChange={(e) => exec('hiliteColor', e.target.value)} aria-label="형광펜 색" />
-            </label>
-            <Btn icon="fa-solid fa-eye-slash" label="스포일러 (눌러야 보이는 글자)" onClick={() => wrapSelection('spoiler')} />
-            <Btn icon="fa-solid fa-text-slash" label="서식 지우기" onClick={() => exec('removeFormat')} />
-            <span className="tb-sep" />
-            <Btn icon="fa-solid fa-align-left" label="왼쪽 정렬" onClick={() => exec('justifyLeft')} />
-            <Btn icon="fa-solid fa-align-center" label="가운데 정렬" onClick={() => exec('justifyCenter')} />
-            <Btn icon="fa-solid fa-align-right" label="오른쪽 정렬" onClick={() => exec('justifyRight')} />
-            <Btn icon="fa-solid fa-align-justify" label="양쪽 정렬" onClick={() => exec('justifyFull')} />
-            <span className="tb-sep" />
-            <Btn icon="fa-solid fa-list-ul" label="글머리 목록" active={state.ul} onClick={() => exec('insertUnorderedList')} />
-            <Btn icon="fa-solid fa-list-ol" label="번호 목록" active={state.ol} onClick={() => exec('insertOrderedList')} />
-            <Btn icon="fa-solid fa-indent" label="들여쓰기" onClick={() => exec('indent')} />
-            <Btn icon="fa-solid fa-outdent" label="내어쓰기" onClick={() => exec('outdent')} />
-            <span className="tb-sep" />
-            <Btn icon="fa-solid fa-link" label="링크" onClick={addLink} />
-            <Btn icon="fa-regular fa-image" label="사진 올리기" onClick={async () => insertImages(await pickFile('image/*', true))} />
-            <Btn icon="fa-solid fa-crop-simple" label="사진 편집 (본문 사진을 누른 뒤 누르면 그 사진을 편집해요)" onClick={openImageEditor} />
-            <Btn icon="fa-solid fa-images" label="사진 나란히 올리기" onClick={async () => insertImages(await pickFile('image/*', true), true)} />
-            <Btn icon="fa-brands fa-youtube" label="유튜브" onClick={addYoutube} />
-            <span className="tb-sep" />
-            <Btn label="이름 변환 넣기" onClick={() => setMenu(menu === 'names' ? null : 'names')} active={menu === 'names'}>
-              <span className="tb-text">{'{{이름}}'}</span>
-            </Btn>
-            <Btn label="블록 넣기" onClick={() => setMenu(menu === 'blocks' ? null : 'blocks')} active={menu === 'blocks'}>
-              <i className="fa-solid fa-plus" /> <span className="tb-text">블록</span>
-            </Btn>
-          </>
+        {mode === 'rich' ? (
+          <div className="tb-groups">
+            <div className="tb-group">
+              <select className="tb-select" value={BLOCKS.some((b) => b.value === state.block) ? state.block : 'p'} onChange={(e) => exec('formatBlock', e.target.value)} aria-label="문단 모양">
+                {BLOCKS.map((b) => (
+                  <option key={b.value} value={b.value}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="tb-group">
+              <Btn icon="fa-solid fa-bold" label="굵게 (Ctrl+B)" active={state.bold} onClick={() => exec('bold')} />
+              <Btn icon="fa-solid fa-italic" label="기울임 (Ctrl+I)" active={state.italic} onClick={() => exec('italic')} />
+              <Btn icon="fa-solid fa-underline" label="밑줄 (Ctrl+U)" active={state.underline} onClick={() => exec('underline')} />
+              <MenuBtn name="text" icon="fa-solid fa-font" label="글자" />
+            </div>
+            <div className="tb-group">
+              <MenuBtn name="align" icon="fa-solid fa-align-left" current={alignIcon} label="정렬" />
+              <MenuBtn name="list" icon="fa-solid fa-list-ul" label="목록" />
+            </div>
+            <div className="tb-group">
+              <Btn icon="fa-solid fa-link" label="링크" onClick={addLink} />
+              <MenuBtn name="photo" icon="fa-regular fa-image" label="사진" />
+              <MenuBtn name="insert" icon="fa-solid fa-plus" label="넣기" />
+            </div>
+            <div className="tb-group">{modeToggle}</div>
+          </div>
+        ) : (
+          <div className="tb-groups">
+            <span className="tb-html-hint">HTML 직접 입력 중 · &lt;style&gt;, &lt;script&gt;도 쓸 수 있어요</span>
+            <div className="tb-group">{modeToggle}</div>
+          </div>
         )}
       </div>
 
-      {menu === 'names' && (
+      {mode === 'rich' && menu && (
         <div className="tb-menu">
-          <p className="tb-menu-help">글을 볼 때 프로필 이름으로 바뀌어요. 이름을 바꾸면 모든 글에 한 번에 반영돼요.</p>
-          <div className="tb-menu-items">
-            {[
-              ['{{나}}', app.site.pair.me.name],
-              ['{{상대}}', app.site.pair.partner.name],
-              ['{{페어}}', app.site.pair.pairName],
-            ].map(([code, name]) => (
-              <button type="button" key={code} onMouseDown={(e) => e.preventDefault()} onClick={() => insertHtml(code)}>
-                <code>{code}</code> → {name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {menu === 'blocks' && (
-        <div className="tb-menu">
-          {TEMPLATES.map((g) => (
-            <div key={g.group} className="tb-menu-group">
-              <span className="tb-menu-label">{g.group}</span>
-              <div className="tb-menu-items">
-                {g.items.map((t) => (
-                  <button type="button" key={t.label} onMouseDown={(e) => e.preventDefault()} onClick={() => insertBlock(t.html)}>
-                    <i className={t.icon} /> {t.label}
-                  </button>
-                ))}
+          {menu === 'text' && (
+            <>
+              <div className="tb-menu-group">
+                <span className="tb-menu-label">모양</span>
+                <div className="tb-menu-items">
+                  <MI icon="fa-solid fa-strikethrough" label="취소선" active={state.strikeThrough} onClick={() => exec('strikeThrough')} />
+                  <MI icon="fa-solid fa-eye-slash" label="스포일러" onClick={() => wrapSelection('spoiler')} />
+                  <MI icon="fa-solid fa-text-slash" label="서식 지우기" onClick={() => exec('removeFormat')} />
+                  <label className="tb-color-chip" onMouseDown={() => restore()}>
+                    <i className="fa-solid fa-palette" /> 글자색
+                    <input type="color" onChange={(e) => exec('foreColor', e.target.value)} aria-label="글자색" />
+                  </label>
+                  <label className="tb-color-chip" onMouseDown={() => restore()}>
+                    <i className="fa-solid fa-highlighter" /> 형광펜
+                    <input type="color" defaultValue="#fff59d" onChange={(e) => exec('hiliteColor', e.target.value)} aria-label="형광펜 색" />
+                  </label>
+                </div>
               </div>
+              <div className="tb-menu-group">
+                <span className="tb-menu-label">크기</span>
+                <div className="tb-menu-items">
+                  {SIZES.map((sz) => (
+                    <MI key={sz.value} label={sz.label} keep onClick={() => exec('fontSize', sz.value)} />
+                  ))}
+                </div>
+              </div>
+              <div className="tb-menu-group">
+                <span className="tb-menu-label">글꼴</span>
+                <select
+                  className="tb-font-select"
+                  value=""
+                  onChange={(e) => {
+                    const font = FONTS.find((f) => f.key === e.target.value)
+                    if (!font) return
+                    loadFontByKey(font.key)
+                    exec('fontName', font.family.split(',')[0].replace(/['"]/g, '').trim())
+                    setMenu(null)
+                  }}
+                  aria-label="글꼴"
+                >
+                  <option value="">글꼴 고르기</option>
+                  {FONTS.filter((f) => f.key !== 'custom' && f.key !== 'system').map((f) => (
+                    <option key={f.key} value={f.key}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
+
+          {menu === 'align' && (
+            <div className="tb-menu-items">
+              <MI icon="fa-solid fa-align-left" label="왼쪽" active={state.align === 'left'} onClick={() => exec('justifyLeft')} />
+              <MI icon="fa-solid fa-align-center" label="가운데" active={state.align === 'center'} onClick={() => exec('justifyCenter')} />
+              <MI icon="fa-solid fa-align-right" label="오른쪽" active={state.align === 'right'} onClick={() => exec('justifyRight')} />
+              <MI icon="fa-solid fa-align-justify" label="양쪽" active={state.align === 'full'} onClick={() => exec('justifyFull')} />
             </div>
-          ))}
+          )}
+
+          {menu === 'list' && (
+            <div className="tb-menu-items">
+              <MI icon="fa-solid fa-list-ul" label="글머리 목록" active={state.ul} onClick={() => exec('insertUnorderedList')} />
+              <MI icon="fa-solid fa-list-ol" label="번호 목록" active={state.ol} onClick={() => exec('insertOrderedList')} />
+              <MI icon="fa-solid fa-indent" label="들여쓰기" keep onClick={() => exec('indent')} />
+              <MI icon="fa-solid fa-outdent" label="내어쓰기" keep onClick={() => exec('outdent')} />
+            </div>
+          )}
+
+          {menu === 'photo' && (
+            <>
+              <p className="tb-menu-help">본문 사진을 한 번 누르고 "사진 편집"을 누르면 그 사진을 고칠 수 있어요. 사진은 붙여넣기·끌어놓기로도 넣을 수 있어요.</p>
+              <div className="tb-menu-items">
+                <MI icon="fa-solid fa-crop-simple" label="편집해서 올리기 / 사진 편집" onClick={openImageEditor} />
+                <MI icon="fa-regular fa-image" label="바로 올리기" onClick={async () => insertImages(await pickFile('image/*', true))} />
+                <MI icon="fa-solid fa-images" label="여러 장 나란히" onClick={async () => insertImages(await pickFile('image/*', true), true)} />
+              </div>
+            </>
+          )}
+
+          {menu === 'insert' && (
+            <>
+              <div className="tb-menu-group">
+                <span className="tb-menu-label">이름 변환 · 글을 볼 때 프로필 이름으로 바뀌어요</span>
+                <div className="tb-menu-items">
+                  {[
+                    ['{{나}}', app.site.pair.me.name],
+                    ['{{상대}}', app.site.pair.partner.name],
+                    ['{{페어}}', app.site.pair.pairName],
+                  ].map(([code, name]) => (
+                    <MI key={code} onClick={() => insertHtml(code)}>
+                      <code>{code}</code> → {name}
+                    </MI>
+                  ))}
+                </div>
+              </div>
+              {TEMPLATES.map((g) => (
+                <div key={g.group} className="tb-menu-group">
+                  <span className="tb-menu-label">{g.group}</span>
+                  <div className="tb-menu-items">
+                    {g.items.map((t) => (
+                      <MI key={t.label} icon={t.icon} label={t.label} onClick={() => insertBlock(t.html)} />
+                    ))}
+                    {g.group === '기타' && <MI icon="fa-brands fa-youtube" label="유튜브" onClick={addYoutube} />}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
 
