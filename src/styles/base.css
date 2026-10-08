@@ -138,38 +138,14 @@ label {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-/* 스크롤바: 배경은 투명, 바는 사용자 색. 마우스를 올리면 바가 조금 두꺼워져요. */
-/* 파이어폭스는 아래 ::-webkit-scrollbar를 몰라서 표준 속성으로 색만 맞춰요.
-   (크롬은 표준 속성을 쓰면 아래 디자인을 무시하므로 파이어폭스에만 적용) */
-@supports not selector(::-webkit-scrollbar) {
-  * {
-    scrollbar-color: var(--scrollbar, rgba(128, 128, 128, 0.5)) transparent;
-    scrollbar-width: thin;
-  }
+/* 스크롤바는 숨기고(스크롤은 그대로), 대신 왼쪽 아래 '맨 위로' 버튼을 써요. */
+* {
+  scrollbar-width: none;
 }
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-  background: transparent;
-}
-::-webkit-scrollbar-track,
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar, rgba(128, 128, 128, 0.5));
-  background-clip: padding-box;
-  border: 4px solid transparent;
-  border-radius: 999px;
-  min-height: 40px;
-  transition: border-width 0.2s;
-}
-::-webkit-scrollbar-thumb:hover,
-::-webkit-scrollbar-thumb:active {
-  border-width: 2px;
-}
-::-webkit-scrollbar-button {
   display: none;
+  width: 0;
+  height: 0;
 }
 
 h1,
@@ -1261,4 +1237,43 @@ html.inner-scroll #root {
 html.inner-scroll body.no-scroll #root,
 html.inner-scroll.home-fixed #root {
   overflow-y: hidden;
+}
+
+/* 맨 위로 버튼 (창 왼쪽 아래, 아이콘만) */
+.scroll-top-btn {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--accent);
+  font-size: 1.05rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.3s var(--ease), background-color 0.2s;
+}
+.scroll-top-btn.show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.scroll-top-btn:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+@media (max-width: 640px) {
+  .scroll-top-btn {
+    display: none;
+  }
 }

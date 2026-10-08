@@ -303,7 +303,6 @@ export const DESIGN_SECTIONS = [
       { key: 'allowToggle', label: '방문자가 라이트/다크 바꿀 수 있게', type: 'toggle' },
       { key: 'animations', label: '애니메이션', type: 'toggle' },
       { key: 'hoverLift', label: '마우스를 올리면 살짝 떠오르기', type: 'toggle' },
-      { key: 'scrollbarColor', label: '스크롤바 색 (비우면 포인트 색)', type: 'color' },
     ],
   },
   {

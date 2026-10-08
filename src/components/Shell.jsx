@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { swapNames, useApp } from '../lib/store.jsx'
-import { navigate, useLocation } from '../lib/router.js'
+import { navigate, scrollRoot, scrollTop, useLocation } from '../lib/router.js'
 import { api } from '../lib/api.js'
 import { isRecent } from '../lib/format.js'
 import { BgmCard } from './Bgm.jsx'
@@ -49,6 +49,7 @@ export function Shell({ children }) {
         </main>
         <Footer />
         {nav !== 'drawer' && <BottomNav path={loc.path} />}
+        <ScrollTopButton />
         {app.toast && (
           <div className="toast" key={app.toast.id} role="status">
             {app.toast.message}
@@ -414,5 +415,34 @@ function BrowserFrame({ path, showUrl, onMenu, children }) {
       </div>
       <div className="browser-body">{children}</div>
     </div>
+  )
+}
+
+// 스크롤바 대신 쓰는 '맨 위로' 버튼. 조금 내려가면 창 왼쪽 아래에 나타나요. (휴대폰에서는 숨김)
+function ScrollTopButton() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const on = () => setShow(scrollTop() > 320)
+    on()
+    // 사이트 배경 이미지를 쓸 때는 #root가 스크롤되므로, 캡처 단계로 모든 스크롤을 들어요.
+    window.addEventListener('scroll', on, { capture: true, passive: true })
+    return () => window.removeEventListener('scroll', on, { capture: true })
+  }, [])
+  return (
+    <button
+      type="button"
+      className={`scroll-top-btn ${show ? 'show' : ''}`}
+      onClick={() => {
+        const el = scrollRoot()
+        const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        ;(el || window).scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' })
+      }}
+      aria-label="맨 위로"
+      title="맨 위로"
+      tabIndex={show ? 0 : -1}
+      aria-hidden={!show}
+    >
+      <i className="fa-solid fa-arrow-up" />
+    </button>
   )
 }
