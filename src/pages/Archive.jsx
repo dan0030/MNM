@@ -7,6 +7,7 @@ import { LargeTitle } from '../components/Shell.jsx'
 import { PostList } from '../components/PostList.jsx'
 import { Empty, Paging, Spinner } from '../components/ui.jsx'
 import { LIST_STYLES } from '../lib/defaults.js'
+import { ThreadFeed } from '../components/Thread.jsx'
 
 const STYLE_ICONS = {
   list: 'fa-solid fa-list',
@@ -27,6 +28,7 @@ export default function Archive({ kind, param, search }) {
   const [error, setError] = useState(null)
   const [query, setQuery] = useState(q)
   const category = kind === 'category' ? app.categories.find((c) => c.slug === param) : null
+  const isThread = category?.page_type === 'thread' && !date
   const scopeKey = `od-view-${kind}-${param || ''}`
   const baseStyle = category?.list_style || app.theme.listStyle
   const [viewStyle, setViewStyle] = useState(() => {
@@ -47,6 +49,7 @@ export default function Archive({ kind, param, search }) {
       setData({ items: [], total: 0, page: 1, pages: 1 })
       return
     }
+    if (isThread) return
     let alive = true
     setData(null)
     setError(null)
@@ -63,7 +66,7 @@ export default function Archive({ kind, param, search }) {
     return () => {
       alive = false
     }
-  }, [kind, param, q, page, date, app.site.postsPerPage])
+  }, [kind, param, q, page, date, app.site.postsPerPage, isThread])
 
   let title = '전체 기록'
   let subtitle = data ? `${data.total}개의 글` : ''
@@ -128,6 +131,10 @@ export default function Archive({ kind, param, search }) {
         </div>
       )}
 
+      {isThread ? (
+        <ThreadFeed category={category} search={search} />
+      ) : (
+        <>
       <div className="list-toolbar">
         <span className="list-count">{data ? `${data.total}개` : ''}</span>
         <div className="view-switch" role="radiogroup" aria-label="목록 모양">
@@ -151,6 +158,8 @@ export default function Archive({ kind, param, search }) {
         <PostList items={data.items} style={style} />
       )}
       {data && <Paging page={data.page} pages={data.pages} onChange={goPage} />}
+        </>
+      )}
     </div>
   )
 }

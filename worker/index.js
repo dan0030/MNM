@@ -4,6 +4,8 @@ import { checkPassword, hashPassword, randomId, safeEqual, sign, verify } from '
 const SESSION_COOKIE = 'od_session'
 const SESSION_DAYS = 30
 const SETTING_KEYS = ['site', 'theme', 'home']
+// 카테고리 페이지 종류: posts(일반 게시판) · thread(타임라인 타래). 새 종류는 여기에 추가해요.
+const PAGE_TYPES = ['posts', 'thread']
 const MAX_SETTING_BYTES = 512 * 1024
 const D1_FILE_LIMIT = 1_900_000
 const R2_FILE_LIMIT = 25 * 1024 * 1024
@@ -234,8 +236,8 @@ async function handleApi(request, env, ctx, url) {
     if (method === 'DELETE') {
       requireAdmin()
       await db.batch([
-        db.prepare('DELETE FROM posts WHERE id = ?').bind(id),
-        db.prepare('DELETE FROM comments WHERE post_id = ?').bind(id),
+        db.prepare('DELETE FROM comments WHERE post_id = ? OR post_id IN (SELECT id FROM posts WHERE thread_id = ?)').bind(id, id),
+        db.prepare('DELETE FROM posts WHERE id = ? OR thread_id = ?').bind(id, id),
       ])
       return json({ ok: true })
     }
@@ -379,6 +381,7 @@ async function saveCategories(db, list) {
     icon: clampStr(c.icon, 60),
     description: clampStr(c.description, 200),
     list_style: ['list', 'gallery', 'memo', 'card', 'timeline'].includes(c.list_style) ? c.list_style : null,
+    page_type: PAGE_TYPES.includes(c.page_type) ? c.page_type : 'posts',
     parentKey: c.parentKey != null ? String(c.parentKey) : c.parent_id != null ? String(c.parent_id) : null,
     sort_order: i,
     hidden: c.hidden ? 1 : 0,
@@ -411,8 +414,8 @@ async function saveCategories(db, list) {
     prepared.map((c) => {
       const parentId = c.parentKey && keyToId.has(c.parentKey) && keyToId.get(c.parentKey) !== c.id ? keyToId.get(c.parentKey) : null
       return db
-        .prepare('UPDATE categories SET name = ?, slug = ?, icon = ?, description = ?, list_style = ?, parent_id = ?, sort_order = ?, hidden = ? WHERE id = ?')
-        .bind(c.name, c.slug, c.icon, c.description, c.list_style, parentId, c.sort_order, c.hidden, c.id)
+        .prepare('UPDATE categories SET name = ?, slug = ?, icon = ?, description = ?, list_style = ?, page_type = ?, parent_id = ?, sort_order = ?, hidden = ? WHERE id = ?')
+        .bind(c.name, c.slug, c.icon, c.description, c.list_style, c.page_type, parentId, c.sort_order, c.hidden, c.id)
     }),
   )
 }
@@ -423,7 +426,8 @@ async function saveCategories(db, list) {
 
 const LIST_COLUMNS = `p.id, p.type, p.title, p.excerpt, p.thumbnail, p.category_id, p.tags, p.visibility, p.pinned,
   p.views, p.reactions, p.extra, p.published_at, p.updated_at,
-  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count`
+  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+  (SELECT COUNT(*) FROM posts r WHERE r.thread_id = p.id) AS reply_count`
 
 function shapeListItem(row, admin) {
   const locked = row.visibility === 'protected' && !admin
@@ -443,6 +447,8 @@ function shapeListItem(row, admin) {
     reactions: parseJson(row.reactions, {}),
     subtitle: extra.subtitle || '',
     commentCount: row.comment_count || 0,
+    replyCount: row.reply_count || 0,
+    author: extra.author || 'me',
     publishedAt: row.published_at,
     updatedAt: row.updated_at,
   }
@@ -522,6 +528,15 @@ async function listPosts(db, admin, params) {
       .all(),
   ])
   let items = rows.results.map((r) => shapeListItem(r, admin))
+  // 타임라인 타래 페이지는 목록에서 본문까지 바로 보여줘요.
+  if (params.get('full') === '1' && items.length) {
+    const open = items.filter((it) => !it.locked).map((it) => it.id)
+    if (open.length) {
+      const { results } = await db.prepare(`SELECT id, content FROM posts WHERE id IN (${open.map(() => '?').join(',')})`).bind(...open).all()
+      const byId = new Map(results.map((r) => [r.id, r.content]))
+      items = items.map((it) => (byId.has(it.id) ? { ...it, content: byId.get(it.id) } : it))
+    }
+  }
   if (ids) items.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id))
   const total = count?.n || 0
   return { items, total, page, pages: Math.max(1, Math.ceil(total / limit)) }
@@ -530,6 +545,8 @@ async function listPosts(db, admin, params) {
 async function getPost(db, id, admin, unlocked) {
   const row = await db.prepare(`SELECT p.*, (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count FROM posts p WHERE p.id = ?`).bind(id).first()
   if (!row || (row.visibility === 'private' && !admin)) throw new HttpError(404, '글을 찾을 수 없어요.')
+  // 타래에 달린 글은 맨 위 글(타래 시작 글)로 안내해요.
+  if (row.type === 'reply') return { replyOf: row.thread_id, id: row.id }
   const base = shapeListItem(row, admin || unlocked)
   const extra = parseJson(row.extra, {})
   const post = {
@@ -542,6 +559,14 @@ async function getPost(db, id, admin, unlocked) {
     post.content = row.content
     post.format = row.format
     post.extra = extra
+    const replies = await db
+      .prepare('SELECT id, content, format, extra, reactions, published_at, updated_at FROM posts WHERE thread_id = ? ORDER BY published_at ASC, id ASC')
+      .bind(id)
+      .all()
+    post.thread = replies.results.map((r) => {
+      const ex = parseJson(r.extra, {})
+      return { id: r.id, content: r.content, format: r.format, author: ex.author || 'me', extra: ex, publishedAt: r.published_at, updatedAt: r.updated_at }
+    })
   } else {
     post.extra = { subtitle: extra.subtitle || '', hint: extra.hint || '' }
   }
@@ -589,9 +614,22 @@ async function savePost(db, id, body) {
     : []
   const publishedAt = /^\d{4}-\d{2}-\d{2}/.test(body.publishedAt || '') ? body.publishedAt : nowIso()
   const extra = body.extra && typeof body.extra === 'object' ? body.extra : {}
+  if (body.author === 'me' || body.author === 'partner') extra.author = body.author
+
+  // 타래에 이어 다는 글: 시작 글의 카테고리를 따르고, 공개 범위는 시작 글을 따라가요.
+  const isReply = body.type === 'reply'
+  let threadId = null
+  let categoryId = body.categoryId ? Number(body.categoryId) : null
+  if (isReply) {
+    const root = await db.prepare("SELECT id, category_id FROM posts WHERE id = ? AND type = 'post'").bind(Number(body.threadId)).first()
+    if (!root) throw new HttpError(404, '이어 달 타래를 찾을 수 없어요.')
+    threadId = root.id
+    categoryId = root.category_id
+  }
+  const title = clampStr(body.title?.trim() || plain.replace(/\s+/g, ' ').slice(0, 40) || '(사진)', 200)
 
   let passwordHash = null
-  if (visibility === 'protected') {
+  if (visibility === 'protected' && !isReply) {
     if (body.password) passwordHash = await hashPassword(body.password)
     else if (id) {
       const row = await db.prepare('SELECT password_hash FROM posts WHERE id = ?').bind(id).first()
@@ -601,27 +639,28 @@ async function savePost(db, id, body) {
   }
 
   const values = [
-    body.type === 'notice' ? 'notice' : 'post',
-    clampStr(body.title, 200),
+    isReply ? 'reply' : body.type === 'notice' ? 'notice' : 'post',
+    title,
     content,
     body.format === 'html' ? 'html' : 'rich',
     excerpt,
     plain.slice(0, 200_000),
     thumbnail,
-    body.categoryId ? Number(body.categoryId) : null,
+    categoryId,
     JSON.stringify(tags),
-    visibility,
+    isReply ? 'public' : visibility,
     passwordHash,
     body.pinned ? 1 : 0,
     body.allowComments === false ? 0 : 1,
     JSON.stringify(extra).slice(0, 20_000),
+    threadId,
     publishedAt,
   ]
 
   if (id) {
     const res = await db
       .prepare(`UPDATE posts SET type = ?, title = ?, content = ?, format = ?, excerpt = ?, plain = ?, thumbnail = ?, category_id = ?,
-        tags = ?, visibility = ?, password_hash = ?, pinned = ?, allow_comments = ?, extra = ?, published_at = ?, updated_at = ? WHERE id = ?`)
+        tags = ?, visibility = ?, password_hash = ?, pinned = ?, allow_comments = ?, extra = ?, thread_id = ?, published_at = ?, updated_at = ? WHERE id = ?`)
       .bind(...values, nowIso(), id)
       .run()
     if (!res.meta.changes) throw new HttpError(404, '글을 찾을 수 없어요.')
@@ -630,7 +669,7 @@ async function savePost(db, id, body) {
   const now = nowIso()
   const res = await db
     .prepare(`INSERT INTO posts (type, title, content, format, excerpt, plain, thumbnail, category_id, tags, visibility, password_hash,
-      pinned, allow_comments, extra, published_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      pinned, allow_comments, extra, thread_id, published_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
     .bind(...values, now, now)
     .run()
   return res.meta.last_row_id
@@ -822,12 +861,12 @@ async function importAll(db, data) {
     return db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`).bind(...cols.map((c) => row[c] ?? null))
   }
   for (const s of data.settings || []) if (SETTING_KEYS.includes(s.key)) stmts.push(insert('settings', s, ['key', 'value']))
-  for (const c of data.categories || []) stmts.push(insert('categories', c, ['id', 'name', 'slug', 'icon', 'description', 'list_style', 'parent_id', 'sort_order', 'hidden']))
+  for (const c of data.categories || []) stmts.push(insert('categories', c, ['id', 'name', 'slug', 'icon', 'description', 'list_style', 'page_type', 'parent_id', 'sort_order', 'hidden']))
   for (const p of data.posts || [])
     stmts.push(
       insert('posts', p, [
         'id', 'type', 'title', 'content', 'format', 'excerpt', 'plain', 'thumbnail', 'category_id', 'tags', 'visibility', 'password_hash',
-        'pinned', 'allow_comments', 'views', 'reactions', 'extra', 'published_at', 'created_at', 'updated_at',
+        'pinned', 'allow_comments', 'views', 'reactions', 'extra', 'thread_id', 'published_at', 'created_at', 'updated_at',
       ]),
     )
   for (const c of data.comments || [])

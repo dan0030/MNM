@@ -457,6 +457,10 @@ h4 {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.drawer-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .drawer-section {
@@ -623,6 +627,10 @@ h4 {
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.drawer-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .drawer-section {

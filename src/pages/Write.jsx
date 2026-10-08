@@ -56,6 +56,7 @@ export default function Write({ id }) {
       const base = { ...EMPTY, publishedAt: nowLocal() }
       const sp = new URLSearchParams(window.location.search)
       if (sp.get('type') === 'notice') base.type = 'notice'
+      if (sp.get('category')) base.categoryId = Number(sp.get('category'))
       if (saved && window.confirm('임시저장된 글이 있어요. 이어서 쓸까요?')) setPost({ ...base, ...saved })
       else setPost(base)
       return
@@ -63,6 +64,10 @@ export default function Write({ id }) {
     api
       .post(id)
       .then((p) => {
+        if (p.replyOf) {
+          navigate(`/post/${p.replyOf}#reply-${p.id}`, { replace: true })
+          return
+        }
         const loaded = {
           type: p.type,
           title: p.title,
@@ -78,6 +83,7 @@ export default function Write({ id }) {
           excerpt: '',
           publishedAt: (p.publishedAt || '').slice(0, 16),
           extra: { ...EMPTY.extra, ...(p.extra || {}) },
+          author: p.author || 'me',
           baseUpdatedAt: p.updatedAt,
         }
         setHasPassword(p.visibility === 'protected')
@@ -131,7 +137,8 @@ export default function Write({ id }) {
   }
 
   async function save() {
-    if (!post.title.trim()) {
+    const threadCat = app.categories.find((c) => c.id === Number(post.categoryId))?.page_type === 'thread'
+    if (!post.title.trim() && !threadCat) {
       app.showToast('제목을 적어주세요.')
       return
     }
@@ -282,6 +289,17 @@ export default function Write({ id }) {
             </>
           )}
 
+          <div className="field">
+            <span className="field-label">글쓴이 (타임라인 타래에서 보여요)</span>
+            <Segmented
+              value={post.author || 'me'}
+              onChange={(v) => set({ author: v })}
+              options={[
+                { value: 'me', label: app.site.pair.me.name || '나' },
+                { value: 'partner', label: app.site.pair.partner.name || '상대' },
+              ]}
+            />
+          </div>
           <div className="field">
             <Switch checked={post.pinned} onChange={(v) => set({ pinned: v })} label="목록 맨 위에 고정" />
           </div>

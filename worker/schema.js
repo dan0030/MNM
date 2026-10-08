@@ -63,11 +63,29 @@ const TABLES = [
   )`,
 ]
 
+// 이미 만들어진 데이터베이스에 나중에 추가된 컬럼들. (이미 있으면 조용히 넘어가요)
+const MIGRATIONS = [
+  `ALTER TABLE categories ADD COLUMN page_type TEXT NOT NULL DEFAULT 'posts'`,
+  `ALTER TABLE posts ADD COLUMN thread_id INTEGER`,
+  `CREATE INDEX IF NOT EXISTS idx_posts_thread ON posts (thread_id, published_at)`,
+]
+
 let ready = null
+
+async function migrate(db) {
+  await db.batch(TABLES.map((sql) => db.prepare(sql)))
+  for (const sql of MIGRATIONS) {
+    try {
+      await db.prepare(sql).run()
+    } catch (err) {
+      if (!/duplicate column/i.test(String(err?.message || err))) throw err
+    }
+  }
+}
 
 export function ensureSchema(db) {
   if (!ready) {
-    ready = db.batch(TABLES.map((sql) => db.prepare(sql))).catch((err) => {
+    ready = migrate(db).catch((err) => {
       ready = null
       throw err
     })

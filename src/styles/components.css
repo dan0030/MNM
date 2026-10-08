@@ -1947,3 +1947,298 @@ textarea.code,
   white-space: nowrap;
   overflow-x: auto;
 }
+
+.page-type-pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.page-type-pick button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.page-type-pick button i {
+  grid-row: span 2;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.page-type-pick button small {
+  color: var(--text-sub);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.page-type-pick button.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+/* ---------------- 타임라인 타래 (One UI 카드 + 트위터식 연결선) ---------------- */
+
+.tw-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tw-card {
+  padding: 18px 20px;
+}
+.tw-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  position: relative;
+}
+.tw-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tw-avatar {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  padding: 2px;
+  border: 2px solid var(--ring, var(--accent));
+  background: var(--surface);
+  position: relative;
+  z-index: 1;
+}
+.tw-avatar img,
+.tw-avatar > span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-weight: 800;
+}
+.tw-avatar.add {
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--line);
+  color: var(--text-sub);
+}
+.tw-line {
+  flex: 1;
+  width: 2px;
+  margin: 4px 0 -16px;
+  border-radius: 2px;
+  background: var(--line);
+  display: none;
+}
+.tw-row.has-next .tw-line {
+  display: block;
+}
+.tw-row + .tw-row {
+  padding-top: 16px;
+}
+.tw-main {
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.tw-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+.tw-head.long {
+  flex-direction: column;
+  gap: 0;
+  margin: 2px 0 10px;
+}
+.tw-name {
+  font-weight: 800;
+}
+.tw-handle,
+.tw-dot,
+.tw-time {
+  color: var(--text-sub);
+  font-size: 0.88rem;
+}
+.tw-content .tw-prose {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.tw-content.big .tw-prose {
+  font-size: 1.12rem;
+}
+.tw-content .tw-prose > :last-child {
+  margin-bottom: 0;
+}
+.tw-content .tw-prose img {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.tw-content.clamp {
+  max-height: 26em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(#000 80%, transparent);
+  mask-image: linear-gradient(#000 80%, transparent);
+}
+.tw-content-link {
+  display: block;
+  color: inherit;
+}
+.tw-time-long {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text-sub);
+  font-size: 0.88rem;
+}
+.tw-locked {
+  display: block;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-size: 0.9rem;
+}
+.tw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+  font-size: 0.84rem;
+  color: var(--text-sub);
+}
+.tw-actions a,
+.tw-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+.tw-actions a:hover,
+.tw-actions button:hover,
+.tw-actions .accent {
+  color: var(--accent);
+}
+.tw-actions .danger:hover {
+  color: var(--danger);
+}
+.tw-actions.small {
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+.tw-thread .article-admin {
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+.tw-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 6px 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.tw-reactions {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.tw-reactions .reactions {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.tw-compose-open {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-weight: 600;
+  text-align: left;
+}
+.tw-compose-open:hover {
+  color: var(--accent);
+}
+.tw-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tw-composer-editor .rich-editor {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.tw-composer-editor .editor-area {
+  min-height: 140px;
+  padding: 16px 18px;
+}
+.tw-composer-editor .html-area {
+  min-height: 180px;
+}
+.tw-composer-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tw-author-pick {
+  display: flex;
+  gap: 6px;
+}
+.tw-author-pick button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 4px 4px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.tw-author-pick button .tw-avatar {
+  width: 28px;
+  height: 28px;
+  padding: 1px;
+  border-width: 1.5px;
+}
+.tw-author-pick button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .tw-card {
+    padding: 16px;
+  }
+  .tw-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .tw-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}

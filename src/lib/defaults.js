@@ -352,6 +352,12 @@ export const DEFAULT_HOME = {
   ],
 }
 
+// 카테고리 페이지 종류. 새 종류를 만들면 여기와 worker/index.js 의 PAGE_TYPES에 추가해요.
+export const PAGE_TYPES = [
+  { value: 'posts', label: '일반 게시판', icon: 'fa-regular fa-file-lines', desc: '제목이 있는 글을 목록(리스트·갤러리·메모 등)으로 보여줘요.' },
+  { value: 'thread', label: '타임라인 타래', icon: 'fa-solid fa-diagram-next', desc: '트위터처럼 글 아래로 글을 계속 이어 다는 타래를 세워요.' },
+]
+
 export const LIST_STYLES = [
   { value: 'list', label: '리스트' },
   { value: 'gallery', label: '갤러리' },

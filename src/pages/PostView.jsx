@@ -7,24 +7,32 @@ import { useTopbarTitle } from '../components/Shell.jsx'
 import { Content } from '../components/Content.jsx'
 import { Comments } from '../components/Comments.jsx'
 import { Empty, Spinner } from '../components/ui.jsx'
+import { ThreadView } from '../components/Thread.jsx'
 
 export default function PostView({ id }) {
   const app = useApp()
   const [post, setPost] = useState(null)
   const [error, setError] = useState(null)
 
+  const [reloadKey, setReloadKey] = useState(0)
+
   useEffect(() => {
     let alive = true
-    setPost(null)
+    if (!reloadKey) setPost(null)
     setError(null)
     api
       .post(id)
-      .then((p) => alive && setPost(p))
+      .then((p) => {
+        if (!alive) return
+        // 타래 중간 글 주소로 들어오면 타래 시작 글로 옮겨가요.
+        if (p.replyOf) navigate(`/post/${p.replyOf}#reply-${p.id}`, { replace: true })
+        else setPost(p)
+      })
       .catch((e) => alive && setError(e.message))
     return () => {
       alive = false
     }
-  }, [id])
+  }, [id, reloadKey])
 
   useTopbarTitle(post?.title || '')
 
@@ -49,8 +57,35 @@ export default function PostView({ id }) {
     }
   }
 
+  const isThread = !post.locked && post.type === 'post' && (category?.page_type === 'thread' || post.thread?.length > 0)
+  const adminButtons = app.admin && (
+    <div className="article-admin">
+      <a href={`/write/${post.id}`} className="btn small">
+        <i className="fa-solid fa-pen" /> 수정
+      </a>
+      <button type="button" className="btn small ghost danger" onClick={remove}>
+        <i className="fa-solid fa-trash" /> {isThread ? '타래 전체 삭제' : '삭제'}
+      </button>
+    </div>
+  )
+
   return (
     <div className="post-view">
+      {isThread ? (
+        <>
+          {category && (
+            <a href={`/category/${encodeURIComponent(category.slug)}`} className="tw-back">
+              <i className="fa-solid fa-chevron-left" /> {category.name}
+            </a>
+          )}
+          <ThreadView post={post} onChanged={() => setReloadKey((k) => k + 1)} adminTools={adminButtons} />
+          {app.site.features.reactions !== false && (
+            <div className="card tw-card tw-reactions">
+              <Reactions post={post} />
+            </div>
+          )}
+        </>
+      ) : (
       <article className={`article card ${post.extra?.cover ? 'has-cover' : ''}`}>
         {post.extra?.cover && <div className="article-cover" style={{ backgroundImage: `url("${post.extra.cover}")` }} />}
         <header className="article-header">
@@ -109,6 +144,7 @@ export default function PostView({ id }) {
           </>
         )}
       </article>
+      )}
 
       <nav className="article-nav">
         {post.prev ? (

@@ -3,7 +3,7 @@ import { useApp } from '../lib/store.jsx'
 import { api } from '../lib/api.js'
 import { navigate } from '../lib/router.js'
 import { formatDate, formatDateTime } from '../lib/format.js'
-import { DEFAULT_THEME, LIST_STYLES, PRESETS, deepMerge, resolveTheme } from '../lib/defaults.js'
+import { DEFAULT_THEME, LIST_STYLES, PAGE_TYPES, PRESETS, deepMerge, resolveTheme } from '../lib/defaults.js'
 import { LargeTitle } from '../components/Shell.jsx'
 import { Fields, IconInput, ColorInput } from '../components/Fields.jsx'
 import { Empty, Paging, Segmented, Spinner } from '../components/ui.jsx'
@@ -360,7 +360,7 @@ function CategoriesTab() {
 
   function add() {
     const key = `new-${Date.now()}`
-    setList((l) => [...l, { key, name: '새 카테고리', slug: '', icon: 'fa-solid fa-folder', description: '', list_style: '', parentKey: '', hidden: 0, count: 0 }])
+    setList((l) => [...l, { key, name: '새 카테고리', slug: '', icon: 'fa-solid fa-folder', description: '', list_style: '', page_type: 'posts', parentKey: '', hidden: 0, count: 0 }])
     setOpen(key)
   }
 
@@ -393,6 +393,7 @@ function CategoriesTab() {
           </span>
           <button type="button" className="cat-edit-name" onClick={() => setOpen(isOpen ? null : c.key)} aria-expanded={isOpen}>
             {c.name}
+            {c.page_type === 'thread' ? <small className="badge">타래</small> : null}
             {c.hidden ? <small> (숨김)</small> : null}
             <small className="muted"> · 글 {c.count || 0}</small>
           </button>
@@ -416,6 +417,18 @@ function CategoriesTab() {
         {isOpen && (
           <div className="cat-edit-form fields">
             <div className="field">
+              <span className="field-label">페이지 종류</span>
+              <div className="page-type-pick">
+                {PAGE_TYPES.map((t) => (
+                  <button type="button" key={t.value} className={(c.page_type || 'posts') === t.value ? 'active' : ''} onClick={() => update(i, { page_type: t.value })} aria-pressed={(c.page_type || 'posts') === t.value}>
+                    <i className={t.icon} />
+                    <strong>{t.label}</strong>
+                    <small>{t.desc}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
               <label className="field-label">이름</label>
               <input value={c.name} onChange={(e) => update(i, { name: e.target.value })} />
             </div>
@@ -431,6 +444,7 @@ function CategoriesTab() {
               <label className="field-label">설명</label>
               <input value={c.description || ''} onChange={(e) => update(i, { description: e.target.value })} />
             </div>
+            {(c.page_type || 'posts') === 'posts' && (
             <div className="field">
               <label className="field-label">목록 모양</label>
               <select value={c.list_style || ''} onChange={(e) => update(i, { list_style: e.target.value })}>
@@ -442,6 +456,7 @@ function CategoriesTab() {
                 ))}
               </select>
             </div>
+            )}
             <div className="field">
               <label className="field-label">상위 카테고리</label>
               <select value={c.parentKey || ''} onChange={(e) => update(i, { parentKey: e.target.value })}>
