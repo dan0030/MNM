@@ -90,6 +90,7 @@ function FieldInput({ id, f, value, onChange }) {
           min={f.min}
           max={f.max}
           step={f.step || 1}
+          placeholder={f.placeholder}
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
         />

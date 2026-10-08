@@ -71,7 +71,7 @@ export const SITE_FIELDS = [
   { key: 'reactions', label: '반응 이모지 (띄어쓰기로 구분)', type: 'strings', placeholder: '❤️ 🥹 😭 ✨ 👏' },
   { key: 'features.showViews', label: '조회수 보이기', type: 'toggle' },
   { key: 'features.nameSwap', label: '이름 변환 사용', type: 'toggle', help: '글 속 {{나}} {{상대}} {{페어}}를 프로필 이름으로 바꿔요.' },
-  { key: 'postsPerPage', label: '한 페이지에 보일 글 수', type: 'number', min: 3, max: 60 },
+  { key: 'postsPerPage', label: '한 페이지에 보일 글 수 (기본값 · 목록 모양별로는 디자인 › 목록에서)', type: 'number', min: 3, max: 60 },
 ]
 
 const fontOptions = FONTS.map((f) => ({ value: f.key, label: f.label }))
@@ -292,6 +292,15 @@ export const DESIGN_SECTIONS = [
       { key: 'galleryColumns', label: '갤러리 열 수', type: 'range', min: 2, max: 5 },
       { key: 'showThumbs', label: '썸네일 보이기', type: 'toggle' },
       { key: 'showExcerpt', label: '요약 보이기', type: 'toggle' },
+      { type: 'heading', label: '목록 모양별 한 페이지 글 수', help: '비워두면 사이트 설정의 \'한 페이지에 보일 글 수\'를 따라요. (최대 60)' },
+      ...LIST_STYLES.map((s) => ({
+        key: `perPage_${s.value}`,
+        label: s.label.replace(/ \(.*\)$/, ''),
+        type: 'number',
+        min: 1,
+        max: 60,
+        placeholder: '비우면 사이트 기본값',
+      })),
     ],
   },
   {

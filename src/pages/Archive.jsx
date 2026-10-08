@@ -7,6 +7,7 @@ import { LargeTitle } from '../components/Shell.jsx'
 import { PostList } from '../components/PostList.jsx'
 import { Empty, Paging, Spinner } from '../components/ui.jsx'
 import { ThreadFeed } from '../components/Thread.jsx'
+import { perPageFor } from '../lib/defaults.js'
 
 
 // 전체 / 카테고리 / 태그 / 검색 / 공지 목록을 모두 이 화면이 그려요.
@@ -23,6 +24,7 @@ export default function Archive({ kind, param, search }) {
   const isThread = category?.page_type === 'thread' && !date
   // 목록 모양은 관리자가 정한 것 하나로만 보여줘요. (카테고리 설정 > 디자인 › 목록 기본값)
   const style = kind === 'notice' ? app.theme.noticeStyle || 'list' : category?.list_style || app.theme.listStyle
+  const perPage = perPageFor(app.site, app.theme, style)
 
   useEffect(() => {
     setQuery(q)
@@ -37,7 +39,7 @@ export default function Archive({ kind, param, search }) {
     let alive = true
     setData(null)
     setError(null)
-    const params = { page, limit: app.site.postsPerPage || 12 }
+    const params = { page, limit: perPage }
     if (kind === 'category') params.category = param
     if (kind === 'tag') params.tag = param
     if (kind === 'search') params.q = q
@@ -50,7 +52,7 @@ export default function Archive({ kind, param, search }) {
     return () => {
       alive = false
     }
-  }, [kind, param, q, page, date, app.site.postsPerPage, isThread])
+  }, [kind, param, q, page, date, perPage, isThread])
 
   let title = '전체 기록'
   let subtitle = data ? `${data.total}개의 글` : ''
