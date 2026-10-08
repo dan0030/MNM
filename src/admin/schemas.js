@@ -1,5 +1,12 @@
 import { FONTS, LIST_STYLES } from '../lib/defaults.js'
 
+// 목록 모양별 한 페이지 글 수 선택지
+const PER_PAGE_OPTIONS = [
+  { value: '', label: '기본값 (사이트 설정)' },
+  ...[3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 30, 36, 40, 48, 60].map((n) => ({ value: n, label: `${n}개` })),
+  { value: 'all', label: '모든 글 (한 페이지에 전부)' },
+]
+
 export const SITE_FIELDS = [
   { type: 'heading', label: '기본 정보' },
   { key: 'title', label: '사이트 이름' },
@@ -292,14 +299,12 @@ export const DESIGN_SECTIONS = [
       { key: 'galleryColumns', label: '갤러리 열 수', type: 'range', min: 2, max: 5 },
       { key: 'showThumbs', label: '썸네일 보이기', type: 'toggle' },
       { key: 'showExcerpt', label: '요약 보이기', type: 'toggle' },
-      { type: 'heading', label: '목록 모양별 한 페이지 글 수', help: '비워두면 사이트 설정의 \'한 페이지에 보일 글 수\'를 따라요. (최대 60)' },
+      { type: 'heading', label: '목록 모양별 한 페이지 글 수', help: '\'기본값\'은 사이트 설정의 \'한 페이지에 보일 글 수\'를 따라요. \'모든 글\'을 고르면 페이지를 나누지 않고 한 번에 보여줘요.' },
       ...LIST_STYLES.map((s) => ({
         key: `perPage_${s.value}`,
         label: s.label.replace(/ \(.*\)$/, ''),
-        type: 'number',
-        min: 1,
-        max: 60,
-        placeholder: '비우면 사이트 기본값',
+        type: 'select',
+        options: PER_PAGE_OPTIONS,
       })),
     ],
   },

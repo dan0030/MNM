@@ -11,7 +11,7 @@ export function PostList({ items, style = 'list', compact = false }) {
 
   // 글마다 '목록에 요약 보이기'를 끌 수 있어요. (끈 글은 요약 없이 제목만)
   const wantExcerpt = (p) => showExcerpt && !p.hideExcerpt
-  const excerptOf = (p) => (p.locked ? '보호되어 있는 글입니다.' : p.hideExcerpt ? '' : swapNames(p.excerpt, site))
+  const excerptOf = (p) => (p.locked ? '비밀번호가 걸린 비밀글이에요.' : p.hideExcerpt ? '' : swapNames(p.excerpt, site))
   const thumbOf = (p) => (showThumbs && p.thumbnail && !p.locked ? p.thumbnail : null)
 
   if (style === 'masonry') return <MasonryList items={items} thumbOf={thumbOf} excerptOf={excerptOf} compact={compact} />

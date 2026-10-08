@@ -102,7 +102,7 @@ export default function PostView({ id }) {
           )}
           <h1 className="article-title">
             {post.visibility === 'private' && <i className="fa-solid fa-eye-slash lock-icon" title="비공개" />}
-            {post.visibility === 'protected' && <i className="fa-solid fa-lock lock-icon" title="보호글" />}
+            {post.visibility === 'protected' && <i className="fa-solid fa-lock lock-icon" title="비밀글" />}
             {post.title}
           </h1>
           {post.subtitle && <p className="article-subtitle">{post.subtitle}</p>}
@@ -214,7 +214,7 @@ function Unlock({ post, onUnlocked }) {
   return (
     <form className="protected" onSubmit={submit}>
       <i className="fa-solid fa-lock protected-icon" />
-      <h2>보호된 글입니다.</h2>
+      <h2>비밀글입니다.</h2>
       <p>{post.extra?.hint || '이 글의 내용을 보시려면 비밀번호를 입력해주세요.'}</p>
       <div className="protected-form">
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="비밀번호" autoFocus aria-label="비밀번호" />

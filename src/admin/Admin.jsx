@@ -546,7 +546,7 @@ function PostsTab() {
         <select value={visibility} onChange={(e) => setVisibility(e.target.value)} aria-label="공개 범위">
           <option value="">모든 공개 범위</option>
           <option value="public">공개</option>
-          <option value="protected">보호</option>
+          <option value="protected">비밀글</option>
           <option value="private">비공개</option>
         </select>
         <form

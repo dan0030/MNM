@@ -90,6 +90,7 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
   const [uploading, setUploading] = useState(0)
   const [imgEdit, setImgEdit] = useState(null) // { src, file, name, target }
   const selectedImg = useRef(null)
+  const [imgSel, setImgSel] = useState(null) // 지금 골라진 사진 (사진 도구 막대를 띄우려고)
   const [state, setState] = useState({})
 
   // 바깥에서 값이 바뀌었을 때만 편집 영역을 다시 그립니다. (커서가 튀지 않게)
@@ -214,7 +215,34 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
     if (e.target.tagName === 'IMG' && editorRef.current.contains(e.target)) {
       selectedImg.current = e.target
       e.target.classList.add('img-selected')
+      setImgSel({ el: e.target, spoiler: e.target.classList.contains('spoiler-img') })
+    } else {
+      setImgSel(null)
     }
+  }
+
+  function clearImgSel() {
+    selectedImg.current?.classList.remove('img-selected')
+    selectedImg.current = null
+    setImgSel(null)
+  }
+
+  // 골라진 사진을 스포일러(흐리게 가리고 누르면 보이기)로 바꾸거나 되돌려요.
+  function toggleImgSpoiler() {
+    const el = selectedImg.current
+    if (!el || !editorRef.current?.contains(el)) return clearImgSel()
+    const on = !el.classList.contains('spoiler-img')
+    el.classList.toggle('spoiler-img', on)
+    setImgSel({ el, spoiler: on })
+    emit()
+  }
+
+  function removeSelectedImg() {
+    const el = selectedImg.current
+    if (!el || !editorRef.current?.contains(el)) return clearImgSel()
+    el.remove()
+    clearImgSel()
+    emit()
   }
 
   async function openImageEditor() {
@@ -484,7 +512,7 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
 
           {menu === 'photo' && (
             <>
-              <p className="tb-menu-help">본문 사진을 한 번 누르고 "사진 편집"을 누르면 그 사진을 고칠 수 있어요. 사진은 붙여넣기·끌어놓기로도 넣을 수 있어요.</p>
+              <p className="tb-menu-help">본문 사진을 한 번 누르면 사진 도구가 떠요. 거기서 편집하거나 스포일러로 가릴 수 있어요. 사진은 붙여넣기·끌어놓기로도 넣을 수 있어요.</p>
               <div className="tb-menu-items">
                 <MI icon="fa-solid fa-crop-simple" label="편집해서 올리기 / 사진 편집" onClick={openImageEditor} />
                 <MI icon="fa-regular fa-image" label="바로 올리기" onClick={async () => insertImages(await pickFile('image/*', true))} />
@@ -522,6 +550,26 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
               ))}
             </>
           )}
+        </div>
+      )}
+
+      {mode === 'rich' && imgSel && (
+        <div className="img-tool-bar" role="toolbar" aria-label="선택한 사진">
+          <span className="img-tool-label">
+            <i className="fa-regular fa-image" /> 선택한 사진
+          </span>
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={openImageEditor}>
+            <i className="fa-solid fa-crop-simple" /> 편집
+          </button>
+          <button type="button" className={imgSel.spoiler ? 'active' : ''} aria-pressed={imgSel.spoiler} onMouseDown={(e) => e.preventDefault()} onClick={toggleImgSpoiler}>
+            <i className={imgSel.spoiler ? 'fa-solid fa-eye-slash' : 'fa-regular fa-eye-slash'} /> {imgSel.spoiler ? '스포일러 해제' : '스포일러로 가리기'}
+          </button>
+          <button type="button" className="danger" onMouseDown={(e) => e.preventDefault()} onClick={removeSelectedImg}>
+            <i className="fa-solid fa-trash" /> 삭제
+          </button>
+          <button type="button" className="img-tool-close" onClick={clearImgSel} aria-label="선택 해제">
+            <i className="fa-solid fa-xmark" />
+          </button>
         </div>
       )}
 

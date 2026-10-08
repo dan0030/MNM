@@ -32,9 +32,31 @@ export function Content({ html, className = 'prose', runScripts = true }) {
     el.querySelectorAll('img').forEach((img) => {
       img.loading = 'lazy'
     })
+    // 스포일러 사진은 흐리게 가린 틀로 감싸고, 누르면 보여줘요.
+    el.querySelectorAll('img.spoiler-img').forEach((img) => {
+      if (img.parentElement?.classList.contains('spoiler-img-wrap')) return
+      const wrap = document.createElement('span')
+      wrap.className = 'spoiler-img-wrap'
+      wrap.setAttribute('role', 'button')
+      wrap.setAttribute('tabindex', '0')
+      wrap.setAttribute('aria-label', '스포일러 사진 · 눌러서 보기')
+      const label = document.createElement('span')
+      label.className = 'spoiler-img-label'
+      label.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span>스포일러 · 눌러서 보기</span>'
+      img.replaceWith(wrap)
+      wrap.append(img, label)
+    })
   }, [html, site, runScripts])
 
   function onClick(e) {
+    const spoilerImg = e.target.closest('.spoiler-img-wrap')
+    if (spoilerImg && !spoilerImg.classList.contains('revealed')) {
+      e.preventDefault()
+      spoilerImg.classList.add('revealed')
+      spoilerImg.removeAttribute('role')
+      spoilerImg.removeAttribute('aria-label')
+      return
+    }
     const spoiler = e.target.closest('.spoiler')
     if (spoiler) {
       spoiler.classList.toggle('revealed')
@@ -46,7 +68,14 @@ export function Content({ html, className = 'prose', runScripts = true }) {
 
   return (
     <>
-      <div ref={ref} className={className} onClick={onClick} />
+      <div
+        ref={ref}
+        className={className}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('spoiler-img-wrap')) onClick(e)
+        }}
+      />
       {lightbox &&
         createPortal(
         <div className="lightbox" onClick={() => setLightbox(null)} role="dialog" aria-label="이미지 크게 보기">

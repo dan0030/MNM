@@ -3072,3 +3072,62 @@ textarea.code,
 .sheet-body .fields + .fields {
   margin-top: 18px;
 }
+
+/* 글쓰기: 사진을 고르면 뜨는 사진 도구 */
+.img-tool-bar {
+  position: sticky;
+  top: calc(var(--topbar-h, 56px) + 8px);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 6px 6px 6px 12px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  font-size: 0.84rem;
+}
+.img-tool-label {
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: auto;
+}
+.img-tool-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 650;
+  font-size: 0.82rem;
+}
+.img-tool-bar button.active {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.img-tool-bar button.danger {
+  color: var(--danger);
+}
+.img-tool-bar .img-tool-close {
+  padding: 6px 9px;
+  background: transparent;
+  color: var(--text-sub);
+}
+.tw-composer-foot .tw-secret-toggle {
+  margin-left: auto;
+  margin-right: 8px;
+}
+.tw-secret-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tw-secret-fields input {
+  flex: 1 1 160px;
+  min-width: 0;
+}

@@ -391,9 +391,11 @@ export const LIST_STYLES = [
   { value: 'timeline', label: '타임라인' },
 ]
 
-// 목록 모양별 한 페이지 글 수 (디자인 › 목록에서 정해요). 비우면 사이트 기본값을 따라요.
+// 목록 모양별 한 페이지 글 수 (디자인 › 목록에서 정해요). 비우면 사이트 기본값, 'all'이면 모든 글을 한 페이지에.
 export function perPageFor(site, theme, style) {
-  const n = Number(theme?.[`perPage_${style}`]) || Number(site?.postsPerPage) || 12
+  const v = theme?.[`perPage_${style}`]
+  if (v === 'all') return 'all'
+  const n = Number(v) || Number(site?.postsPerPage) || 12
   return Math.min(60, Math.max(1, Math.round(n)))
 }
 

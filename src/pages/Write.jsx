@@ -143,7 +143,7 @@ export default function Write({ id }) {
       return
     }
     if (post.visibility === 'protected' && !post.password && !hasPassword) {
-      app.showToast('보호글 비밀번호를 정해주세요.')
+      app.showToast('비밀글 비밀번호를 정해주세요.')
       return
     }
     setSaving(true)
@@ -260,16 +260,17 @@ export default function Write({ id }) {
               onChange={(v) => set({ visibility: v })}
               options={[
                 { value: 'public', label: '공개', icon: 'fa-solid fa-globe' },
-                { value: 'protected', label: '보호', icon: 'fa-solid fa-lock' },
+                { value: 'protected', label: '비밀글', icon: 'fa-solid fa-lock' },
                 { value: 'private', label: '비공개', icon: 'fa-solid fa-eye-slash' },
               ]}
             />
+            <p className="field-help">비밀글은 비밀번호를 아는 사람만 열어볼 수 있고, 비공개는 관리자만 볼 수 있어요.</p>
           </div>
           {post.visibility === 'protected' && (
             <>
               <div className="field">
                 <label className="field-label" htmlFor="w-pw">
-                  보호글 비밀번호
+                  비밀글 비밀번호
                 </label>
                 <input
                   id="w-pw"

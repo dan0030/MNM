@@ -93,9 +93,14 @@ function stripHtml(html) {
     .trim()
 }
 
+// 대표 이미지는 본문 첫 사진으로 정하되, 스포일러로 가린 사진은 건너뛰어요. (목록에서 미리 보이지 않게)
 function firstImage(html) {
-  const m = String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i)
-  return m ? m[1] : null
+  for (const tag of String(html || '').match(/<img\b[^>]*>/gi) || []) {
+    if (/class=["'][^"']*\bspoiler-img\b/i.test(tag)) continue
+    const m = tag.match(/src=["']([^"']+)["']/i)
+    if (m) return m[1]
+  }
+  return null
 }
 
 function slugify(name) {
@@ -553,7 +558,8 @@ async function listPosts(db, admin, params) {
     binds.push(...ids)
   }
 
-  const limit = Math.min(Math.max(Number(params.get('limit')) || 12, 1), 60)
+  // limit=all: 한 페이지에 모든 글 (너무 많으면 1000개까지)
+  const limit = params.get('limit') === 'all' ? 1000 : Math.min(Math.max(Number(params.get('limit')) || 12, 1), 60)
   const page = Math.max(Number(params.get('page')) || 1, 1)
   const sort = params.get('sort') || 'recent'
   const pinnedFirst = params.get('pinned') !== '0' && sort === 'recent'
@@ -598,6 +604,8 @@ async function getPost(db, id, admin, unlocked) {
     allowComments: !!row.allow_comments,
     createdAt: row.created_at,
   }
+  // 잠긴 글에는 비밀번호 힌트만 알려줘요.
+  if (post.locked) post.extra = extra.hint ? { hint: String(extra.hint) } : {}
   if (!post.locked) {
     post.content = row.content
     post.format = row.format
@@ -678,7 +686,7 @@ async function savePost(db, id, body) {
       const row = await db.prepare('SELECT password_hash FROM posts WHERE id = ?').bind(id).first()
       passwordHash = row?.password_hash || null
     }
-    if (!passwordHash) throw new HttpError(400, '보호글에는 비밀번호가 필요해요.')
+    if (!passwordHash) throw new HttpError(400, '비밀글에는 비밀번호가 필요해요.')
   }
 
   const values = [

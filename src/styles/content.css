@@ -331,3 +331,68 @@
 .editor-area .memo-box {
   cursor: text;
 }
+
+/* 스포일러 사진: 흐리게 가려두고 누르면 보여요 */
+.prose .spoiler-img-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  vertical-align: top;
+  cursor: pointer;
+}
+.prose .spoiler-img-wrap img {
+  display: block;
+  margin: 0;
+  filter: blur(28px) brightness(0.85);
+  transform: scale(1.08);
+  transition: filter 0.45s var(--ease), transform 0.45s var(--ease);
+}
+.prose .spoiler-img-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.18);
+  transition: opacity 0.3s;
+}
+.prose .spoiler-img-label i {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 1.05rem;
+}
+.prose .spoiler-img-wrap.revealed {
+  cursor: zoom-in;
+}
+.prose .spoiler-img-wrap.revealed img {
+  filter: none;
+  transform: none;
+}
+.prose .spoiler-img-wrap.revealed .spoiler-img-label {
+  opacity: 0;
+  pointer-events: none;
+}
+.prose .spoiler-img-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* 글쓰기 화면에서는 살짝만 흐리게 + 표시 */
+.editor-area img.spoiler-img {
+  filter: blur(3px) grayscale(0.4);
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
