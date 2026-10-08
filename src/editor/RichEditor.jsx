@@ -4,6 +4,9 @@ import { uploadFile, pickFile } from '../lib/image.js'
 import { escapeHtml, youtubeId } from '../lib/format.js'
 import { FONTS } from '../lib/defaults.js'
 import { loadFontByKey, loadFontsIn } from '../lib/theme.js'
+import { api } from '../lib/api.js'
+import { ImageEditor } from '../components/ImageEditor.jsx'
+import { isEditableImage } from '../components/Fields.jsx'
 
 const BLOCKS = [
   { value: 'p', label: '본문' },
@@ -85,6 +88,8 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
   const savedRange = useRef(null)
   const [menu, setMenu] = useState(null)
   const [uploading, setUploading] = useState(0)
+  const [imgEdit, setImgEdit] = useState(null) // { src, file, name, target }
+  const selectedImg = useRef(null)
   const [state, setState] = useState({})
 
   // 바깥에서 값이 바뀌었을 때만 편집 영역을 다시 그립니다. (커서가 튀지 않게)
@@ -126,7 +131,8 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
   }, [])
 
   function emit() {
-    const html = editorRef.current.innerHTML
+    // 사진 선택 표시(img-selected)는 저장하지 않아요.
+    const html = editorRef.current.innerHTML.replace(/ class="img-selected"/g, '').replace(/\s?img-selected/g, '')
     lastHtml.current = html
     onChange(html)
   }
@@ -198,6 +204,52 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
       return
     }
     insertHtml(`<${tag} class="${className}">${escapeHtml(text)}</${tag}>`)
+  }
+
+  // 본문 속 사진을 누르면 골라진 상태가 되고, "사진 편집"으로 바로 고칠 수 있어요.
+  function onEditorClick(e) {
+    selectedImg.current?.classList.remove('img-selected')
+    selectedImg.current = null
+    if (e.target.tagName === 'IMG' && editorRef.current.contains(e.target)) {
+      selectedImg.current = e.target
+      e.target.classList.add('img-selected')
+    }
+  }
+
+  async function openImageEditor() {
+    const target = selectedImg.current
+    if (target && editorRef.current?.contains(target)) {
+      setImgEdit({ src: target.src, name: target.src.split('/').pop(), target })
+      return
+    }
+    const [file] = await pickFile('image/*')
+    if (!file) return
+    if (!isEditableImage(file.type + file.name)) {
+      insertImages([file])
+      return
+    }
+    setImgEdit({ src: URL.createObjectURL(file), file, name: file.name })
+  }
+
+  async function applyImageEdit(file, { edited }) {
+    const job = imgEdit
+    setUploading((n) => n + 1)
+    try {
+      const url = edited ? (await api.upload(file)).url : await uploadFile(file)
+      if (job.target && editorRef.current?.contains(job.target)) {
+        job.target.src = url
+        job.target.classList.remove('img-selected')
+        emit()
+      } else {
+        insertBlock(`<p><img src="${url}" alt=""></p><p><br></p>`)
+      }
+      if (job.src.startsWith('blob:')) URL.revokeObjectURL(job.src)
+      setImgEdit(null)
+    } catch (e) {
+      app.showToast(e.message)
+    } finally {
+      setUploading((n) => Math.max(0, n - 1))
+    }
   }
 
   async function insertImages(files, asRow = false) {
@@ -354,6 +406,7 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
             <span className="tb-sep" />
             <Btn icon="fa-solid fa-link" label="링크" onClick={addLink} />
             <Btn icon="fa-regular fa-image" label="사진 올리기" onClick={async () => insertImages(await pickFile('image/*', true))} />
+            <Btn icon="fa-solid fa-crop-simple" label="사진 편집 (본문 사진을 누른 뒤 누르면 그 사진을 편집해요)" onClick={openImageEditor} />
             <Btn icon="fa-solid fa-images" label="사진 나란히 올리기" onClick={async () => insertImages(await pickFile('image/*', true), true)} />
             <Btn icon="fa-brands fa-youtube" label="유튜브" onClick={addYoutube} />
             <span className="tb-sep" />
@@ -409,6 +462,7 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
           onInput={emit}
           onBlur={emit}
           onPaste={onPaste}
+          onClick={onEditorClick}
           onDrop={onDrop}
           role="textbox"
           aria-multiline="true"
@@ -433,6 +487,19 @@ export function RichEditor({ value, onChange, mode, onModeChange }) {
               requestAnimationFrame(() => t.setSelectionRange(s + 2, s + 2))
             }
           }}
+        />
+      )}
+      {imgEdit && (
+        <ImageEditor
+          src={imgEdit.src}
+          fileName={imgEdit.name}
+          guide="post"
+          originalFile={imgEdit.file}
+          onCancel={() => {
+            if (imgEdit.src.startsWith('blob:')) URL.revokeObjectURL(imgEdit.src)
+            setImgEdit(null)
+          }}
+          onApply={applyImageEdit}
         />
       )}
       {uploading > 0 && (

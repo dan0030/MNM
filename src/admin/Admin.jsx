@@ -7,6 +7,7 @@ import { DEFAULT_THEME, LIST_STYLES, PAGE_TYPES, PRESETS, deepMerge, resolveThem
 import { LargeTitle } from '../components/Shell.jsx'
 import { Fields, IconInput, ColorInput } from '../components/Fields.jsx'
 import { Empty, Paging, Segmented, Spinner } from '../components/ui.jsx'
+import ImageGuidesTab from './ImageGuides.jsx'
 import { BANNER_FIELDS, PAGE_FIELDS, DESIGN_SECTIONS, PALETTE_KEYS, SITE_FIELDS } from './schemas.js'
 
 const TABS = [
@@ -16,6 +17,7 @@ const TABS = [
   { key: 'categories', label: '카테고리', icon: 'fa-solid fa-folder-tree' },
   { key: 'banners', label: '배너 게시판', icon: 'fa-solid fa-flag' },
   { key: 'pages', label: '페이지 문구', icon: 'fa-solid fa-heading' },
+  { key: 'images', label: '이미지 가이드 · 사진 편집', icon: 'fa-solid fa-crop-simple' },
   { key: 'posts', label: '글 관리', icon: 'fa-regular fa-file-lines' },
   { key: 'comments', label: '댓글 · 방명록', icon: 'fa-regular fa-comments' },
   { key: 'backup', label: '백업 · 파일', icon: 'fa-solid fa-box-archive' },
@@ -80,6 +82,7 @@ export default function Admin({ tab }) {
       {tab === 'site' && <SiteTab />}
       {tab === 'banners' && <SiteTab fields={BANNER_FIELDS} />}
       {tab === 'pages' && <SiteTab fields={PAGE_FIELDS} />}
+      {tab === 'images' && <ImageGuidesTab />}
       {tab === 'design' && <DesignTab />}
       {tab === 'home' && <HomeTab />}
       {tab === 'categories' && <CategoriesTab />}

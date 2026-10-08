@@ -311,11 +311,11 @@ export default function Write({ id }) {
             <summary>더 보기 (대표 이미지 · 커버 · 요약)</summary>
             <div className="field">
               <span className="field-label">대표 이미지 (비우면 본문 첫 사진)</span>
-              <ImageInput value={post.thumbnail} onChange={(v) => set({ thumbnail: v })} />
+              <ImageInput value={post.thumbnail} onChange={(v) => set({ thumbnail: v })} guide="thumbnail" />
             </div>
             <div className="field">
               <span className="field-label">글 상단 커버 이미지</span>
-              <ImageInput value={post.extra.cover || ''} onChange={(v) => setExtra({ cover: v })} />
+              <ImageInput value={post.extra.cover || ''} onChange={(v) => setExtra({ cover: v })} guide="postCover" />
             </div>
             <div className="field">
               <label className="field-label" htmlFor="w-excerpt">

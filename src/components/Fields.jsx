@@ -3,6 +3,8 @@ import { uploadFile, pickFile } from '../lib/image.js'
 import { api } from '../lib/api.js'
 import { useApp } from '../lib/store.jsx'
 import { Segmented, Switch } from './ui.jsx'
+import { ImageEditor } from './ImageEditor.jsx'
+import { IMAGE_GUIDES, guideText } from '../lib/imageGuides.js'
 
 export function getPath(obj, path) {
   return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj)
@@ -117,7 +119,7 @@ function FieldInput({ id, f, value, onChange }) {
     case 'date':
       return <input id={id} type="date" value={value || ''} onChange={(e) => onChange(e.target.value)} />
     case 'image':
-      return <ImageInput id={id} value={value} onChange={onChange} accept={f.accept} uploadOptions={f.uploadOptions} />
+      return <ImageInput id={id} value={value} onChange={onChange} accept={f.accept} uploadOptions={f.uploadOptions} guide={f.guide} />
     case 'icon':
       return <IconInput id={id} value={value} onChange={onChange} />
     case 'strings':
@@ -150,37 +152,86 @@ export function ColorInput({ id, value, onChange }) {
   )
 }
 
-export function ImageInput({ id, value, onChange, accept = 'image/*', uploadOptions }) {
+// 편집기로 열 수 있는 사진인지 (SVG·커서·아이콘 파일은 그대로 올려요)
+export function isEditableImage(nameOrType) {
+  return !/svg|icon|\.cur$|\.ico$|\.svg$/i.test(nameOrType || '')
+}
+
+export function ImageInput({ id, value, onChange, accept = 'image/*', uploadOptions, guide }) {
   const app = useApp()
   const [busy, setBusy] = useState(false)
+  const [editing, setEditing] = useState(null) // { src, file, name }
+  const g = IMAGE_GUIDES[guide]
+
   async function upload() {
     const [file] = await pickFile(accept)
     if (!file) return
+    if (!file.type.startsWith('image/') || !isEditableImage(file.type + file.name)) {
+      await send(file, false)
+      return
+    }
+    setEditing({ src: URL.createObjectURL(file), file, name: file.name })
+  }
+
+  async function send(file, edited) {
     setBusy(true)
     try {
-      onChange(await uploadFile(file, uploadOptions))
+      // 편집기에서 크기를 정했으면 그대로, 아니면 너무 큰 사진만 줄여서 올려요.
+      onChange(edited ? (await api.upload(file)).url : await uploadFile(file, uploadOptions))
+      setEditing(null)
     } catch (e) {
       app.showToast(e.message)
     } finally {
       setBusy(false)
     }
   }
+
+  function close() {
+    if (editing?.src?.startsWith('blob:')) URL.revokeObjectURL(editing.src)
+    setEditing(null)
+  }
+
   return (
-    <div className="image-input">
-      {value && /image|\.cur/.test(accept) ? <img src={value} alt="" /> : <div className="image-input-empty"><i className="fa-regular fa-image" /></div>}
-      <div className="image-input-side">
-        <input id={id} type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="이미지 주소 또는 업로드" />
-        <div className="row gap-s">
-          <button type="button" className="btn small" onClick={upload} disabled={busy}>
-            <i className="fa-solid fa-arrow-up-from-bracket" /> {busy ? '올리는 중' : '업로드'}
-          </button>
-          {value && (
-            <button type="button" className="btn small ghost" onClick={() => onChange('')}>
-              지우기
+    <div className="image-input-wrap">
+      <div className="image-input">
+        {value && /image|\.cur/.test(accept) ? (
+          <img src={value} alt="" className={g?.shape === 'circle' ? 'circle' : ''} style={g?.ratio ? { aspectRatio: String(g.ratio), width: g.ratio > 1.5 ? 140 : 76 } : undefined} />
+        ) : (
+          <div className="image-input-empty">
+            <i className="fa-regular fa-image" />
+          </div>
+        )}
+        <div className="image-input-side">
+          <input id={id} type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="이미지 주소 또는 업로드" />
+          <div className="row gap-s wrap">
+            <button type="button" className="btn small" onClick={upload} disabled={busy}>
+              <i className="fa-solid fa-arrow-up-from-bracket" /> {busy ? '올리는 중' : '업로드'}
             </button>
-          )}
+            {value && isEditableImage(value) && /image/.test(accept) && (
+              <button type="button" className="btn small" onClick={() => setEditing({ src: value, name: value.split('/').pop() })} disabled={busy}>
+                <i className="fa-solid fa-crop-simple" /> 편집
+              </button>
+            )}
+            {value && (
+              <button type="button" className="btn small ghost" onClick={() => onChange('')}>
+                지우기
+              </button>
+            )}
+          </div>
         </div>
       </div>
+      {g && (
+        <p className="image-guide-hint">
+          <i className="fa-solid fa-ruler-combined" /> {guideText(guide)}
+          {g.shape === 'circle' ? ' · 동그랗게 보여요' : ''}
+          <a href="/admin/images" target="_blank" rel="noopener">
+            가이드
+          </a>
+        </p>
+      )}
+      {editing && (
+        <ImageEditor src={editing.src} fileName={editing.name} guide={guide} originalFile={editing.file} onCancel={close} onApply={(file, { edited }) => send(file, edited)} />
+      )}
     </div>
   )
 }
