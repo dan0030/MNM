@@ -302,6 +302,14 @@ export default function Write({ id }) {
             />
           </div>
           <div className="field">
+            <span className="field-label">타임라인 날짜 표시 (세계관 날짜)</span>
+            <div className="tl-date-inputs">
+              <input value={post.extra.tlGroup || ''} onChange={(e) => setExtra({ tlGroup: e.target.value })} placeholder="큰 구분 · 예: 제국력 312년 / 1부" aria-label="타임라인 큰 구분" maxLength={40} />
+              <input value={post.extra.tlLabel || ''} onChange={(e) => setExtra({ tlLabel: e.target.value })} placeholder="날짜 · 예: 봄 3일 / D-7" aria-label="타임라인 날짜" maxLength={30} />
+            </div>
+            <p className="field-help">타임라인 보기에서 실제 날짜 대신 이 문구가 보여요. 비우면 기록 날짜(예: 2026. 10 / 10.9)를 써요. 순서는 위의 기록 날짜 순서를 따라요.</p>
+          </div>
+          <div className="field">
             <Switch
               checked={!post.extra.hideExcerpt}
               onChange={(v) => setExtra({ hideExcerpt: !v })}

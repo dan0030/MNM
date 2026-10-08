@@ -944,7 +944,7 @@ textarea.code,
 .timeline-item {
   position: relative;
   display: grid;
-  grid-template-columns: 54px 1fr;
+  grid-template-columns: var(--tl-date-w, 54px) 1fr;
   gap: 12px;
   padding: 10px 0 10px 22px;
   border-left: 2px solid var(--line);
@@ -964,6 +964,9 @@ textarea.code,
   color: var(--text-sub);
   padding-top: 2px;
   font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
 }
 .timeline-body {
   display: flex;
@@ -3129,5 +3132,14 @@ textarea.code,
 }
 .tw-secret-fields input {
   flex: 1 1 160px;
+  min-width: 0;
+}
+.tl-date-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tl-date-inputs input {
+  flex: 1 1 180px;
   min-width: 0;
 }

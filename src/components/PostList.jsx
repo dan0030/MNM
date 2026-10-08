@@ -73,19 +73,25 @@ export function PostList({ items, style = 'list', compact = false }) {
   }
 
   if (style === 'timeline') {
-    let lastMonth = ''
+    // 글마다 정한 세계관 날짜(큰 구분·날짜 표시)가 있으면 그걸, 없으면 실제 날짜를 보여줘요.
+    const groupOf = (p) => p.tlGroup || p.publishedAt.slice(0, 7).replace('-', '. ')
+    const labelOf = (p) => p.tlLabel || formatDate(p.publishedAt, 'short')
+    // 날짜 칸 너비는 가장 긴 표시에 맞춰요. (너무 길면 줄바꿈)
+    const longest = Math.max(0, ...items.map((p) => [...labelOf(p)].length))
+    const dateWidth = `${Math.min(9, Math.max(3.4, longest * 0.62 + 0.6)).toFixed(1)}em`
+    let lastGroup = null
     return (
-      <div className={`post-list timeline ${compact ? 'compact' : ''}`}>
+      <div className={`post-list timeline ${compact ? 'compact' : ''}`} style={{ '--tl-date-w': dateWidth }}>
         {items.map((p) => {
-          const month = p.publishedAt.slice(0, 7)
-          const showMonth = month !== lastMonth
-          lastMonth = month
+          const group = groupOf(p)
+          const showMonth = group !== lastGroup
+          lastGroup = group
           return (
             <React.Fragment key={p.id}>
-              {showMonth && <div className="timeline-month">{month.replace('-', '. ')}</div>}
+              {showMonth && <div className="timeline-month">{group}</div>}
               <a href={`/post/${p.id}`} className={`timeline-item ${p.locked ? 'locked' : ''}`}>
                 <span className="timeline-dot" />
-                <span className="timeline-date">{formatDate(p.publishedAt, 'short')}</span>
+                <span className="timeline-date">{labelOf(p)}</span>
                 <span className="timeline-body">
                   <strong>
                     {p.locked && <i className="fa-solid fa-lock lock-icon" />}

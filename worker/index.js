@@ -494,6 +494,9 @@ function shapeListItem(row, admin) {
     reactions: parseJson(row.reactions, {}),
     subtitle: extra.subtitle || '',
     hideExcerpt: !!extra.hideExcerpt,
+    // 타임라인 보기에서 실제 날짜 대신 보여줄 세계관 날짜 (비우면 실제 날짜)
+    tlGroup: extra.tlGroup || '',
+    tlLabel: extra.tlLabel || '',
     commentCount: row.comment_count || 0,
     replyCount: row.reply_count || 0,
     author: extra.author || 'me',
