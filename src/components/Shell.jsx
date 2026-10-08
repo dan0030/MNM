@@ -418,7 +418,7 @@ function BrowserFrame({ path, showUrl, onMenu, children }) {
   )
 }
 
-// 스크롤바 대신 쓰는 '맨 위로' 버튼. 조금 내려가면 창 왼쪽 아래에 나타나요. (휴대폰에서는 숨김)
+// 스크롤바 대신 쓰는 '맨 위로' 버튼. 조금 내려가면 창 오른쪽 아래에 나타나요. (휴대폰에서는 숨김)
 function ScrollTopButton() {
   const [show, setShow] = useState(false)
   useEffect(() => {
