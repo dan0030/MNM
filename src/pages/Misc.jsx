@@ -85,6 +85,11 @@ export function CalendarPage() {
       <WidgetFrame widget={{ type: 'calendar', size: 'L', config: {} }}>
         <CalendarWidget config={config} size="L" onMonthChange={setMonth} />
       </WidgetFrame>
+      {app.admin && (
+        <p className="cal-admin-hint">
+          <i className="fa-solid fa-circle-info" /> 날짜를 누르면 그날에 일정을 넣을 수 있어요. 넣은 일정은 홈의 캘린더 위젯에도 같이 보여요.
+        </p>
+      )}
       {month && app.site.pages?.calendar?.listTitle !== ' ' && (
         <h2 className="section-title">
           {(app.site.pages?.calendar?.listTitle || '{년}년 {월}월의 기록').replace('{년}', month.slice(0, 4)).replace('{월}', String(Number(month.slice(5))))}

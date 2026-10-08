@@ -1030,11 +1030,31 @@
   color: var(--on-accent);
   font-weight: 800;
 }
-a.cal-day {
+button.cal-day {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.cal-day.sun:is(button) {
+  color: #e5484d;
+}
+.cal-day.sat:is(button) {
+  color: #3e7bfa;
+}
+.cal-day.has-post,
+.cal-day.has-event {
   font-weight: 700;
 }
-a.cal-day:hover {
+button.cal-day:hover {
   background: var(--accent-soft);
+}
+button.cal-day.today {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .cal-marks {
   position: absolute;
@@ -1064,9 +1084,25 @@ a.cal-day:hover {
   gap: 6px;
   font-size: 0.88rem;
 }
-.cal-events li {
+.cal-events li button {
   display: flex;
   gap: 12px;
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cal-event-label {
+  display: flex;
+  flex-direction: column;
+}
+.cal-event-label small {
+  font-size: 0.76rem;
+  opacity: 0.65;
 }
 .cal-event-day {
   font-weight: 800;
@@ -1891,4 +1927,101 @@ a.cal-day:hover {
 .home .widget::-webkit-scrollbar,
 .home .widget *::-webkit-scrollbar {
   display: none;
+}
+
+/* 날짜를 누르면 뜨는 시트 */
+.day-section + .day-section {
+  margin-top: 18px;
+}
+.day-section-title {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-sub);
+}
+.day-events,
+.day-posts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.day-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 12px 12px 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.day-event-bar {
+  flex: none;
+  align-self: stretch;
+  width: 5px;
+  border-radius: 0 4px 4px 0;
+  background: var(--ev-color, #ff8fab);
+}
+.day-event-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.day-event-body small {
+  color: var(--text-sub);
+  font-size: 0.8rem;
+}
+.day-event-body p {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.day-event-src {
+  flex: none;
+  max-width: 120px;
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  text-align: right;
+}
+.day-posts a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.day-posts a span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.day-posts a > i:first-child {
+  color: var(--accent);
+}
+.day-post-go {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+.ev-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ev-dates input {
+  width: 100%;
+  min-width: 0;
+}
+.cal-admin-hint {
+  margin: 4px 4px 12px;
+  font-size: 0.82rem;
+  color: var(--text-sub);
 }

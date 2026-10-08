@@ -7,6 +7,7 @@ import { Content } from '../components/Content.jsx'
 import { BgmCard } from '../components/Bgm.jsx'
 import { LIST_STYLES } from '../lib/defaults.js'
 import { BannerGrid } from '../pages/Banners.jsx'
+import { DaySheet, eventOccurs, eventWhen } from '../components/CalendarEvents.jsx'
 
 /* ------------------------------------------------------------------ */
 /* 공용 훅                                                              */
@@ -389,12 +390,13 @@ function PlaylistWidget({ config }) {
 }
 
 function CalendarWidget({ config, size, onMonthChange }) {
-  const { site } = useApp()
+  const { site, admin } = useApp()
   const [cursor, setCursor] = useState(() => {
     const d = new Date()
     return { y: d.getFullYear(), m: d.getMonth() }
   })
   const [days, setDays] = useState([])
+  const [openDay, setOpenDay] = useState(null)
   const monthKey = `${cursor.y}-${pad(cursor.m + 1)}`
   useEffect(() => {
     onMonthChange?.(monthKey)
@@ -408,13 +410,15 @@ function CalendarWidget({ config, size, onMonthChange }) {
     }
   }, [monthKey])
 
+  // 일정: 캘린더에서 넣은 일정(사이트 공용) + 이 위젯 설정에 적은 일정 + 페어 시작일
   const events = useMemo(() => {
-    const list = [...(config.events || [])]
+    const list = [...(site.events || [])]
+    for (const e of config.events || []) list.push({ ...e, fixed: '홈 위젯 설정에서 고칠 수 있어요' })
     if (site.pair.startDate && config.showAnniversary !== false) {
-      list.push({ date: site.pair.startDate, label: site.pair.startLabel || '기념일', annual: true, color: '' })
+      list.push({ date: site.pair.startDate, label: site.pair.startLabel || '기념일', annual: true, color: '', fixed: '사이트 설정의 페어 시작일' })
     }
     return list
-  }, [config.events, config.showAnniversary, site.pair.startDate, site.pair.startLabel])
+  }, [site.events, config.events, config.showAnniversary, site.pair.startDate, site.pair.startLabel])
 
   const first = new Date(cursor.y, cursor.m, 1)
   const total = new Date(cursor.y, cursor.m + 1, 0).getDate()
@@ -422,14 +426,18 @@ function CalendarWidget({ config, size, onMonthChange }) {
   for (let i = 0; i < first.getDay(); i++) cells.push(null)
   for (let d = 1; d <= total; d++) cells.push(d)
   const today = todayStr()
-  const eventsOn = (d) =>
-    events.filter((e) => {
-      const ed = parseDate(e.date)
-      if (!ed) return false
-      if (e.annual) return ed.getMonth() === cursor.m && ed.getDate() === d
-      return ed.getFullYear() === cursor.y && ed.getMonth() === cursor.m && ed.getDate() === d
-    })
-  const monthEvents = cells.filter(Boolean).flatMap((d) => eventsOn(d).map((e) => ({ ...e, day: d })))
+  const dateOf = (d) => `${monthKey}-${pad(d)}`
+  const eventsOn = (d) => events.filter((e) => eventOccurs(e, dateOf(d)))
+  // 이번 달 일정 목록: 여러 날짜에 걸친 일정은 이번 달에서 처음 보이는 날에 한 번만
+  const monthEvents = []
+  const seen = new Set()
+  for (const d of cells.filter(Boolean)) {
+    for (const e of eventsOn(d)) {
+      if (seen.has(e)) continue
+      seen.add(e)
+      monthEvents.push({ e, day: d })
+    }
+  }
   const move = (delta) =>
     setCursor((c) => {
       const d = new Date(c.y, c.m + delta, 1)
@@ -459,43 +467,65 @@ function CalendarWidget({ config, size, onMonthChange }) {
         ))}
         {cells.map((d, i) => {
           if (!d) return <span key={`e${i}`} />
-          const date = `${monthKey}-${pad(d)}`
+          const date = dateOf(d)
           const posts = days.filter((p) => p.date === date)
           const evs = eventsOn(d)
           const cls = ['cal-day', date === today && 'today', posts.length && 'has-post', evs.length && 'has-event', i % 7 === 0 && 'sun', i % 7 === 6 && 'sat']
             .filter(Boolean)
             .join(' ')
-          const label = `${d}일${posts.length ? `, 기록 ${posts.length}개` : ''}${evs.length ? `, ${evs.map((e) => e.label).join(', ')}` : ''}`
-          return posts.length ? (
-            <a key={date} href={posts.length === 1 ? `/post/${posts[0].id}` : `/archive?date=${date}`} className={cls} aria-label={label} title={posts.map((p) => p.title).join('\n')}>
+          const label = `${d}일${posts.length ? `, 기록 ${posts.length}개` : ''}${evs.length ? `, 일정 ${evs.map((e) => e.label).join(', ')}` : ''}`
+          const marks = (posts.length > 0 || evs.length > 0) && (
+            <span className="cal-marks">
+              {posts.length > 0 && <i />}
+              {evs.slice(0, posts.length ? 2 : 3).map((e, k) => (
+                <i key={k} className="ev" style={e.color ? { background: e.color } : undefined} />
+              ))}
+            </span>
+          )
+          // 글이나 일정이 있는 날(관리자는 모든 날)을 누르면 그날의 글·일정이 떠요.
+          return posts.length || evs.length || admin ? (
+            <button
+              type="button"
+              key={date}
+              className={cls}
+              aria-label={label}
+              title={[...evs.map((e) => e.label), ...posts.map((p) => p.title)].join('\n') || undefined}
+              onClick={() => setOpenDay(date)}
+            >
               {d}
-              <span className="cal-marks">
-                <i style={evs[0]?.color ? { background: evs[0].color } : undefined} />
-              </span>
-            </a>
+              {marks}
+            </button>
           ) : (
-            <span key={date} className={cls} aria-label={label} title={evs.map((e) => e.label).join('\n') || undefined}>
+            <span key={date} className={cls} aria-label={label}>
               {d}
-              {evs.length > 0 && (
-                <span className="cal-marks">
-                  <i className="ev" style={evs[0].color ? { background: evs[0].color } : undefined} />
-                </span>
-              )}
             </span>
           )
         })}
       </div>
       {size !== 'S' && config.showList !== false && monthEvents.length > 0 && (
         <ul className="cal-events">
-          {monthEvents.map((e, i) => (
+          {monthEvents.map(({ e, day }, i) => (
             <li key={i}>
-              <span className="cal-event-day" style={e.color ? { color: e.color } : undefined}>
-                {cursor.m + 1}.{e.day}
-              </span>
-              <span>{e.label}</span>
+              <button type="button" onClick={() => setOpenDay(dateOf(day))}>
+                <span className="cal-event-day" style={e.color ? { color: e.color } : undefined}>
+                  {cursor.m + 1}.{day}
+                </span>
+                <span className="cal-event-label">
+                  {e.label}
+                  {(e.time || (e.endDate && e.endDate > e.date)) && <small>{eventWhen(e).replace(/^매년 |^\d{4}\./g, '')}</small>}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
+      )}
+      {openDay && (
+        <DaySheet
+          date={openDay}
+          posts={days.filter((p) => p.date === openDay)}
+          events={events.filter((e) => eventOccurs(e, openDay))}
+          onClose={() => setOpenDay(null)}
+        />
       )}
     </div>
   )
@@ -967,7 +997,7 @@ export const WIDGETS = {
       { key: 'showList', label: '이번 달 일정 목록 보이기', type: 'toggle' },
       {
         key: 'events',
-        label: '일정 · 기념일',
+        label: '이 위젯에만 적는 일정 (캘린더에서 날짜를 눌러 넣은 일정은 모든 캘린더에 같이 보여요)',
         type: 'list',
         itemLabel: '일정',
         itemFields: [
@@ -978,7 +1008,7 @@ export const WIDGETS = {
         ],
       },
     ],
-    help: '글이 있는 날에는 점이 찍히고, 누르면 그날의 글로 이동해요.',
+    help: '글이 있는 날에는 점이 찍혀요. 날짜를 누르면 그날의 글과 일정이 뜨고, 관리자는 거기서 일정을 넣을 수 있어요.',
     defaults: { showAnniversary: true, showList: true, events: [] },
   },
   gallery: {

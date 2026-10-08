@@ -36,6 +36,7 @@ export const DEFAULT_SITE = {
   reactions: ['❤️', '🥹', '😭', '✨', '👏'],
   postsPerPage: 12,
   footer: 'ODAN DREAMPAIR',
+  events: [], // 캘린더 일정 { id, date, endDate, time, label, note, color, annual }
   guestbookIntro: '다녀간 흔적을 남겨주세요.',
 }
 
