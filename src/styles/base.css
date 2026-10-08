@@ -1058,3 +1058,55 @@ form.search-field input:focus {
 .post-view {
   padding-top: 28px;
 }
+
+/* ---------------- 홈 큰 제목 배경 ---------------- */
+
+.home-title.bd-card .large-title-inner,
+.home-title.bd-glass .large-title-inner {
+  padding: 22px 26px;
+  border-radius: var(--radius);
+}
+.home-title.bd-card .large-title-inner {
+  background: var(--surface);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+.home-title.bd-glass .large-title-inner {
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, #fff 35%, transparent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+:root[data-mode='dark'] .home-title.bd-glass .large-title-inner {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.home-title.bd-image {
+  position: relative;
+  margin: 10px 0 var(--gap);
+  padding: 26px 26px 24px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  color: #fff;
+  background: var(--home-title-image, var(--accent)) center / cover no-repeat;
+  box-shadow: var(--card-shadow);
+}
+.home-title.bd-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 20%, rgba(0, 0, 0, calc(var(--home-title-dim, 0.35) + 0.25)));
+  background-color: rgba(0, 0, 0, var(--home-title-dim, 0.35));
+}
+.home-title.bd-image .large-title-inner {
+  position: relative;
+}
+.home-title.bd-image .large-title-sub {
+  color: rgba(255, 255, 255, 0.88);
+}
+@media (max-width: 640px) {
+  .home-title.bd-card .large-title-inner,
+  .home-title.bd-glass .large-title-inner {
+    padding: 18px 20px;
+  }
+}

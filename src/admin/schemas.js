@@ -200,6 +200,21 @@ export const DESIGN_SECTIONS = [
       { key: 'expandedHeight', label: '큰 제목 영역 높이', type: 'range', min: 12, max: 50, unit: 'vh', show: (t) => t.headerStyle !== 'compact' },
       { key: 'homeTitle', label: '홈에도 사이트 이름 큰 제목 보이기', type: 'toggle' },
       {
+        key: 'homeTitleBg',
+        label: '홈 큰 제목 배경',
+        type: 'segmented',
+        show: (t) => t.homeTitle,
+        options: [
+          { value: 'none', label: '없음' },
+          { value: 'card', label: '카드' },
+          { value: 'glass', label: '반투명 유리' },
+          { value: 'image', label: '이미지' },
+        ],
+        help: '사이트 배경 위에서 제목과 소개글이 잘 보이도록 뒤에 판을 깔아요.',
+      },
+      { key: 'homeTitleImage', label: '홈 제목 배경 이미지', type: 'image', guide: 'homeTitle', show: (t) => t.homeTitle && t.homeTitleBg === 'image' },
+      { key: 'homeTitleDim', label: '이미지 위 어둡게 (글자 잘 보이게)', type: 'range', min: 0, max: 0.8, step: 0.05, show: (t) => t.homeTitle && t.homeTitleBg === 'image' },
+      {
         key: 'topbarStyle',
         label: '상단바 배경',
         type: 'segmented',

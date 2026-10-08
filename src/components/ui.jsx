@@ -3,8 +3,12 @@ import React, { useEffect, useRef } from 'react'
 // One UI 스타일 하단 시트 (모바일에서는 아래에서 올라오고, 넓은 화면에서는 가운데 떠요)
 export function Sheet({ title, onClose, children, footer, wide = false }) {
   const ref = useRef(null)
+  // 닫기 함수는 매번 새로 만들어져 들어오므로 ref에 담아두고,
+  // 포커스 이동은 시트가 처음 열릴 때 한 번만 해요. (입력 중 포커스를 빼앗지 않게)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose?.()
+    const onKey = (e) => e.key === 'Escape' && closeRef.current?.()
     window.addEventListener('keydown', onKey)
     document.body.classList.add('no-scroll')
     ref.current?.focus()
@@ -12,7 +16,7 @@ export function Sheet({ title, onClose, children, footer, wide = false }) {
       window.removeEventListener('keydown', onKey)
       document.body.classList.remove('no-scroll')
     }
-  }, [onClose])
+  }, [])
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className={`sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={ref}>

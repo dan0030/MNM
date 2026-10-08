@@ -16,6 +16,7 @@ export const IMAGE_GUIDES = {
   album: { label: '플레이리스트 앨범', ratio: 1, size: [300, 300], where: '홈 › 플레이리스트', note: '비우면 유튜브 썸네일이 쓰여요.' },
   widgetBg: { label: '위젯 배경', ratio: null, size: [1200, 800], where: '모든 위젯 › 배경 이미지', note: '위젯 크기에 맞춰 가운데 기준으로 잘려요.' },
   pageBg: { label: '사이트 배경', ratio: 16 / 9, size: [1920, 1080], where: '디자인 › 배경 › 이미지', note: '세로 화면(휴대폰)에서는 양옆이 많이 잘려요. 반복 무늬라면 작은 정사각형도 좋아요.' },
+  homeTitle: { label: '홈 제목 배경', ratio: 3, size: [1500, 500], where: '디자인 › 배치 › 홈 큰 제목 배경', note: '글자가 왼쪽 아래에 올라가요. 그 부분은 너무 복잡하지 않은 사진이 좋아요.' },
   pageHeader: { label: '페이지 제목 위 이미지', ratio: null, size: [640, 320], where: '관리 › 페이지 문구', note: '최대 가로 320px·세로 160px 안에 맞춰 보여요. 배경이 투명한 PNG가 잘 어울려요.' },
   linkBanner: { label: '링크 배너', ratio: 5, size: [200, 40], where: '배너 게시판', note: '200×40이 가장 흔하고, 88×31(작은 배너)도 많이 써요. 움짤은 GIF 그대로 올려주세요.' },
   cursor: { label: '마우스 커서', ratio: 1, size: [32, 32], where: '디자인 › 커서', note: '32×32 이하, 투명 배경 PNG.' },

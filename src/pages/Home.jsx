@@ -53,7 +53,14 @@ export default function Home() {
 
   return (
     <div className={`home ${editing ? 'editing' : ''}`}>
-      {theme.homeTitle && !editing && <LargeTitle title={site.title} subtitle={site.description} />}
+      {theme.homeTitle && !editing && (
+        <LargeTitle
+          title={site.title}
+          subtitle={site.description}
+          className={`home-title bd-${theme.homeTitleBg || 'none'}`}
+          style={theme.homeTitleBg === 'image' && theme.homeTitleImage ? { '--home-title-image': `url("${theme.homeTitleImage}")`, '--home-title-dim': theme.homeTitleDim ?? 0.35 } : undefined}
+        />
+      )}
       {editing ? (
         <HomeEditor draft={draft} setDraft={setDraft} onCancel={() => setEditing(false)} onSave={saveDraft} />
       ) : (

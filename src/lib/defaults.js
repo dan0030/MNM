@@ -148,6 +148,9 @@ export const DEFAULT_THEME = {
   headerStyle: 'expanded', // expanded | compact | centered
   expandedHeight: 30,
   homeTitle: true,
+  homeTitleBg: 'none', // none | card | glass | image
+  homeTitleImage: '',
+  homeTitleDim: 0.35,
   navStyle: 'drawer', // drawer | bottom | both
   drawerSide: 'left',
   homeLayout: 'swipe', // swipe | stack

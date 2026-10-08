@@ -64,7 +64,7 @@ export function useTopbarTitle(title) {
 
 /* One UI 특유의 “큰 제목” 영역. 스크롤해서 제목이 사라지면 상단바에 작은 제목이 나타나요. */
 // pageKey를 주면 관리 › 페이지 문구에서 바꾼 제목·문구가 기본값 대신 쓰여요.
-export function LargeTitle({ pageKey, title: defaultTitle, subtitle: defaultSubtitle, children, eyebrow: defaultEyebrow }) {
+export function LargeTitle({ pageKey, title: defaultTitle, subtitle: defaultSubtitle, children, eyebrow: defaultEyebrow, className = '', style }) {
   const { setTitle, setCollapsed } = useContext(TitleContext)
   const ref = useRef(null)
   const { site } = useApp()
@@ -86,7 +86,7 @@ export function LargeTitle({ pageKey, title: defaultTitle, subtitle: defaultSubt
   }, [title, setTitle, setCollapsed])
 
   return (
-    <header className={`large-title ${custom.align ? `align-${custom.align}` : ''}`}>
+    <header className={`large-title ${custom.align ? `align-${custom.align}` : ''} ${className}`} style={style}>
       <div className="large-title-inner">
         {custom.image && <img className="large-title-image" src={custom.image} alt="" />}
         {eyebrow && <div className="large-title-eyebrow">{eyebrow}</div>}
