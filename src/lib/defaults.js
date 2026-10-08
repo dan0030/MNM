@@ -156,6 +156,7 @@ export const DEFAULT_THEME = {
   navStyle: 'drawer', // drawer | bottom | both
   drawerSide: 'left',
   homeLayout: 'swipe', // swipe | stack
+  homeFixed: true, // 홈 화면을 한 화면 높이에 고정(스크롤 없음)
   dots: 'pill', // pill | dot | line | number | none
   dotsPosition: 'bottom',
 
@@ -170,6 +171,7 @@ export const DEFAULT_THEME = {
   animations: true,
   hoverLift: true,
   iconStyle: 'solid',
+  scrollbarColor: '', // 비우면 포인트 색
 
   // 상단바 · 본문 창
   topbarStyle: 'blur', // blur(반투명 흐림) | solid(불투명) | transparent(투명)

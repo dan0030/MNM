@@ -18,6 +18,13 @@ export default function Home() {
 
   useTopbarTitle(theme.homeTitle ? undefined : site.title)
 
+  // 휴대폰 홈 화면처럼 스크롤 없이 한 화면 안에 배치해요. (편집 중이거나 '아래로 이어보기'일 땐 스크롤 가능)
+  const fixed = theme.homeLayout !== 'stack' && theme.homeFixed !== false && !editing
+  useEffect(() => {
+    document.documentElement.classList.toggle('home-fixed', fixed)
+    return () => document.documentElement.classList.remove('home-fixed')
+  }, [fixed])
+
   useEffect(() => {
     document.title = site.title
   }, [site.title])
@@ -52,7 +59,7 @@ export default function Home() {
   )
 
   return (
-    <div className={`home ${editing ? 'editing' : ''}`}>
+    <div className={`home ${editing ? 'editing' : ''} ${fixed ? 'fixed' : ''}`}>
       {theme.homeTitle && !editing && (
         <LargeTitle
           title={site.title}
@@ -64,7 +71,7 @@ export default function Home() {
       {editing ? (
         <HomeEditor draft={draft} setDraft={setDraft} onCancel={() => setEditing(false)} onSave={saveDraft} />
       ) : (
-        <HomePages home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin ? quickUpdate : null} />
+        <HomePages home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin ? quickUpdate : null} fixed={fixed} admin={app.admin} />
       )}
       {app.admin && !editing && (
         <button type="button" className="fab" onClick={startEdit} aria-label="홈 화면 편집">
@@ -76,11 +83,47 @@ export default function Home() {
   )
 }
 
-function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate }) {
+function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, admin }) {
   const pages = home.pages
   const ref = useRef(null)
+  const swipeRef = useRef(null)
   const [active, setActive] = useState(0)
+  const [height, setHeight] = useState(null)
+  const [overflowing, setOverflowing] = useState([])
+  const [hintClosed, setHintClosed] = useState(false)
   const drag = useRef(null)
+
+  // 창 높이에서 위쪽(상단바·제목)과 아래쪽(하단 탭)을 뺀 만큼을 홈 화면 높이로 써요.
+  useEffect(() => {
+    if (!fixed) {
+      setHeight(null)
+      return
+    }
+    const measure = () => {
+      const el = swipeRef.current
+      if (!el) return
+      const top = el.getBoundingClientRect().top + window.scrollY
+      const bottomSpace = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-space')) || 12
+      setHeight(Math.max(320, Math.floor(window.innerHeight - top - bottomSpace)))
+    }
+    measure()
+    const t = setTimeout(measure, 400)
+    window.addEventListener('resize', measure)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', measure)
+    }
+  }, [fixed])
+
+  // 관리자에게는 화면보다 길어서 아래가 잘리는 페이지를 알려줘요.
+  useEffect(() => {
+    if (!fixed || !admin || !height) return
+    const t = setTimeout(() => {
+      const els = ref.current?.querySelectorAll('.home-page') || []
+      setOverflowing([...els].map((el) => el.scrollHeight > el.clientHeight + 4))
+    }, 600)
+    return () => clearTimeout(t)
+  }, [fixed, admin, height, home])
 
   useEffect(() => {
     const saved = Number(sessionStorage.getItem('od-home-page') || 0)
@@ -150,7 +193,7 @@ function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate }) {
   )
 
   return (
-    <div className="home-swipe">
+    <div className={`home-swipe ${fixed ? 'fixed' : ''}`} ref={swipeRef} style={height ? { height } : undefined}>
       {dotsPosition === 'top' && indicator}
       <div
         className="home-pages"
@@ -170,6 +213,15 @@ function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate }) {
         {pages.map((page, pi) => (
           <section className="home-page" key={page.id} aria-label={`${pi + 1}페이지`} aria-hidden={pi !== active}>
             <WidgetGrid page={page} pageIdx={pi} onQuickUpdate={onQuickUpdate} />
+            {overflowing[pi] && !hintClosed && (
+              <div className="page-overflow-hint">
+                <i className="fa-solid fa-triangle-exclamation" />
+                <span>이 페이지는 화면보다 길어서 아래가 잘려 보여요. 위젯을 줄이거나 다른 페이지로 옮겨주세요. (관리자에게만 보여요)</span>
+                <button type="button" onClick={() => setHintClosed(true)} aria-label="알림 닫기">
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </div>
+            )}
           </section>
         ))}
       </div>

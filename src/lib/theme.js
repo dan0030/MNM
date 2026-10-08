@@ -162,6 +162,7 @@ export function applyTheme(theme, mode) {
     '--frame-bg': `color-mix(in srgb, ${pal.bg} ${Math.max(30, Math.min(100, Number(theme.frameOpacity ?? 92)))}%, transparent)`,
     '--frame-top': `${Number(theme.frameTop ?? 14)}px`,
     '--frame-width': Number(theme.frameWidth) > 0 ? `${Number(theme.frameWidth)}px` : `${theme.contentWidth}px`,
+    '--scrollbar': theme.scrollbarColor || `color-mix(in srgb, ${pal.accent} 55%, transparent)`,
     '--btn-radius': theme.buttonShape === 'pill' ? '999px' : theme.buttonShape === 'square' ? '6px' : 'var(--radius-sm)',
   }
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, String(v))

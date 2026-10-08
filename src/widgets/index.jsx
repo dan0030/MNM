@@ -770,6 +770,10 @@ function BannerBoardWidget({ config }) {
   )
 }
 
+function SpacerWidget({ config }) {
+  return <div className="spacer-widget" style={{ height: `${Number(config.height) || 40}px` }} aria-hidden="true" />
+}
+
 function BgmWidget() {
   return <BgmCard compact />
 }
@@ -1135,6 +1139,16 @@ export const WIDGETS = {
     fields: [{ key: 'count', label: '최대 개수', type: 'number', min: 1, max: 60 }],
     help: '배너는 관리 › 배너 게시판에서 등록해요.',
     defaults: { title: '배너', count: 12 },
+  },
+  spacer: {
+    label: '빈칸 (여백)',
+    icon: 'fa-solid fa-arrows-up-down',
+    sizes: ['S', 'M', 'L'],
+    Component: SpacerWidget,
+    bare: true,
+    fields: [{ key: 'height', label: '높이', type: 'range', min: 4, max: 400, unit: 'px' }],
+    help: '위젯 사이를 띄우거나, 크기가 작게(S)·중간(M)이면 옆 칸을 비워둘 때 써요.',
+    defaults: { height: 40, hideTitle: true },
   },
   bgm: {
     label: 'BGM 플레이어',

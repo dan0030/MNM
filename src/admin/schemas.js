@@ -252,6 +252,7 @@ export const DESIGN_SECTIONS = [
       { key: 'bottomNav', label: '하단 탭 메뉴', type: 'navItems', show: (t) => t.navStyle !== 'drawer' },
       { key: 'drawerSide', label: '서랍 위치', type: 'segmented', options: [{ value: 'left', label: '왼쪽' }, { value: 'right', label: '오른쪽' }], show: (t) => t.navStyle !== 'bottom' },
       { key: 'homeLayout', label: '홈 화면 페이지', type: 'segmented', options: [{ value: 'swipe', label: '옆으로 넘기기' }, { value: 'stack', label: '아래로 이어보기' }] },
+      { key: 'homeFixed', label: '홈 화면을 한 화면 안에 고정 (스크롤 없음)', type: 'toggle', show: (t) => t.homeLayout !== 'stack', help: '휴대폰 홈 화면처럼 창 높이 안에 위젯을 배치해요. 넘치는 페이지는 관리자에게 알려줘요.' },
       {
         key: 'dots',
         label: '페이지 표시',
@@ -289,6 +290,7 @@ export const DESIGN_SECTIONS = [
       { key: 'allowToggle', label: '방문자가 라이트/다크 바꿀 수 있게', type: 'toggle' },
       { key: 'animations', label: '애니메이션', type: 'toggle' },
       { key: 'hoverLift', label: '마우스를 올리면 살짝 떠오르기', type: 'toggle' },
+      { key: 'scrollbarColor', label: '스크롤바 색 (비우면 포인트 색)', type: 'color' },
     ],
   },
   {

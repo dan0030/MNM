@@ -1623,3 +1623,16 @@ a.cal-day:hover {
   color: #ff0033;
   opacity: 1;
 }
+
+/* 빈칸 위젯: 편집할 때만 자리가 보여요 */
+.spacer-widget {
+  width: 100%;
+}
+.edit-slot .spacer-widget {
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(45deg, transparent 0 8px, color-mix(in srgb, var(--text) 4%, transparent) 8px 16px);
+}
+.w-spacer.style-bare {
+  padding: 0;
+}
