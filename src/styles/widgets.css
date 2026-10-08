@@ -16,7 +16,8 @@
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  align-items: flex-start;
+  /* 페이지 높이를 가장 긴 페이지에 맞춰야 위/가운데/아래 정렬이 의미가 있어요 */
+  align-items: stretch;
   outline: none;
   margin: 0 -16px;
   overscroll-behavior-x: contain;
@@ -35,6 +36,40 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   padding: 0 16px 4px;
+  display: flex;
+  flex-direction: column;
+}
+.home-page > .widget-grid {
+  flex: none;
+}
+/* safe: 위젯이 페이지보다 길면 위쪽이 잘리지 않게 위부터 보여줘요 */
+.home-page.align-top {
+  justify-content: flex-start;
+}
+.home-page.align-center {
+  justify-content: safe center;
+}
+.home-page.align-bottom {
+  justify-content: safe flex-end;
+}
+.page-align-pick {
+  margin-left: auto;
+  margin-right: 8px;
+}
+.page-align-pick button {
+  padding: 5px 10px;
+}
+@media (max-width: 560px) {
+  .edit-page-head {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-align-pick {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    justify-content: space-between;
+  }
 }
 
 .home-stack {

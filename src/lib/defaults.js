@@ -156,7 +156,8 @@ export const DEFAULT_THEME = {
   navStyle: 'drawer', // drawer | bottom | both
   drawerSide: 'left',
   homeLayout: 'swipe', // swipe | stack
-  homeFixed: true, // 홈 화면을 한 화면 높이에 고정(스크롤 없음)
+  homeFixed: true,
+  homeAlign: 'top', // 홈 위젯 세로 정렬: top | center | bottom (페이지마다 따로 정할 수도 있어요) // 홈 화면을 한 화면 높이에 고정(스크롤 없음)
   dots: 'pill', // pill | dot | line | number | none
   dotsPosition: 'bottom',
 

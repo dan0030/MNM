@@ -252,6 +252,18 @@ export const DESIGN_SECTIONS = [
       { key: 'bottomNav', label: '하단 탭 메뉴', type: 'navItems', show: (t) => t.navStyle !== 'drawer' },
       { key: 'drawerSide', label: '서랍 위치', type: 'segmented', options: [{ value: 'left', label: '왼쪽' }, { value: 'right', label: '오른쪽' }], show: (t) => t.navStyle !== 'bottom' },
       { key: 'homeLayout', label: '홈 화면 페이지', type: 'segmented', options: [{ value: 'swipe', label: '옆으로 넘기기' }, { value: 'stack', label: '아래로 이어보기' }] },
+      {
+        key: 'homeAlign',
+        label: '홈 위젯 세로 정렬',
+        type: 'segmented',
+        show: (t) => t.homeLayout !== 'stack',
+        options: [
+          { value: 'top', label: '위' },
+          { value: 'center', label: '가운데' },
+          { value: 'bottom', label: '아래' },
+        ],
+        help: '페이지마다 다르게 하고 싶으면 홈 편집에서 페이지별로 바꿀 수 있어요.',
+      },
       { key: 'homeFixed', label: '홈 화면을 한 화면 안에 고정 (스크롤 없음)', type: 'toggle', show: (t) => t.homeLayout !== 'stack', help: '휴대폰 홈 화면처럼 창 높이 안에 위젯을 배치해요. 넘치는 페이지는 관리자에게 알려줘요.' },
       {
         key: 'dots',

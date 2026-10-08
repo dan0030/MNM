@@ -71,7 +71,7 @@ export default function Home() {
       {editing ? (
         <HomeEditor draft={draft} setDraft={setDraft} onCancel={() => setEditing(false)} onSave={saveDraft} />
       ) : (
-        <HomePages home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin ? quickUpdate : null} fixed={fixed} admin={app.admin} />
+        <HomePages home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin ? quickUpdate : null} fixed={fixed} admin={app.admin} align={theme.homeAlign || 'top'} />
       )}
       {app.admin && !editing && (
         <button type="button" className="fab" onClick={startEdit} aria-label="홈 화면 편집">
@@ -83,7 +83,7 @@ export default function Home() {
   )
 }
 
-function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, admin }) {
+function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, admin, align = 'top' }) {
   const pages = home.pages
   const ref = useRef(null)
   const swipeRef = useRef(null)
@@ -211,7 +211,7 @@ function HomePages({ home, layout, dots, dotsPosition, onQuickUpdate, fixed, adm
         }}
       >
         {pages.map((page, pi) => (
-          <section className="home-page" key={page.id} aria-label={`${pi + 1}페이지`} aria-hidden={pi !== active}>
+          <section className={`home-page align-${page.align || align}`} key={page.id} aria-label={`${pi + 1}페이지`} aria-hidden={pi !== active}>
             <WidgetGrid page={page} pageIdx={pi} onQuickUpdate={onQuickUpdate} />
             {overflowing[pi] && !hintClosed && (
               <div className="page-overflow-hint">
@@ -372,6 +372,31 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
         <section key={page.id} className="edit-page">
           <div className="edit-page-head">
             <span className="edit-page-name">{pi + 1}페이지</span>
+            <div className="segmented small page-align-pick" role="radiogroup" aria-label={`${pi + 1}페이지 위젯 정렬`}>
+              {[
+                ['', '기본', 'fa-solid fa-rotate-left'],
+                ['top', '위', 'fa-solid fa-arrow-up-long'],
+                ['center', '가운데', 'fa-solid fa-arrows-up-down'],
+                ['bottom', '아래', 'fa-solid fa-arrow-down-long'],
+              ].map(([v, label, icon]) => (
+                <button
+                  type="button"
+                  key={v || 'default'}
+                  role="radio"
+                  aria-checked={(page.align || '') === v}
+                  className={(page.align || '') === v ? 'active' : ''}
+                  title={v ? `위젯을 ${label}에 맞추기` : '디자인 설정(배치)을 따라요'}
+                  onClick={() =>
+                    update((d) => {
+                      if (v) d.pages[pi].align = v
+                      else delete d.pages[pi].align
+                    })
+                  }
+                >
+                  <i className={icon} /> {label}
+                </button>
+              ))}
+            </div>
             <div className="row gap-xs">
               <button type="button" className="icon-btn small" disabled={pi === 0} onClick={() => update((d) => d.pages.splice(pi - 1, 0, d.pages.splice(pi, 1)[0]))} aria-label="페이지 앞으로">
                 <i className="fa-solid fa-arrow-up" />
