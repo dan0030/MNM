@@ -71,6 +71,17 @@
     justify-content: space-between;
   }
 }
+/* 모바일 배치 편집 칸은 화면이 넓어도 휴대폰 너비라서 같은 모양으로 줄바꿈해요 */
+.target-mobile .edit-page-head {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.target-mobile .page-align-pick {
+  order: 3;
+  width: 100%;
+  margin: 0;
+  justify-content: space-between;
+}
 
 .home-stack {
   display: flex;
@@ -1706,4 +1717,167 @@ a.cal-day:hover {
 }
 .w-spacer.style-bare {
   padding: 0;
+}
+
+/* ---------------- 모바일 홈 화면 편집 · 미리보기 ---------------- */
+
+.btn.tonal {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.home-target-pick button {
+  padding: 6px 12px;
+  gap: 6px;
+}
+.target-state {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  color: var(--text-sub);
+}
+.target-state.on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+/* 모바일 배치는 실제 휴대폰 너비로 편집해요 */
+.edit-pages.target-mobile {
+  max-width: 430px;
+  margin: 0 auto;
+}
+.edit-pages.target-mobile .widget {
+  padding: 18px;
+}
+.edit-pages.target-mobile .widget.style-transparent,
+.edit-pages.target-mobile .widget.style-bare {
+  padding: 0;
+}
+.mobile-setup {
+  max-width: 460px;
+  margin: 24px auto;
+  padding: 32px 24px;
+  text-align: center;
+}
+.mobile-setup-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.7rem;
+  margin-bottom: 12px;
+}
+.mobile-setup h3 {
+  margin: 0 0 6px;
+}
+.mobile-setup p {
+  margin: 0 0 20px;
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.mobile-setup .row {
+  justify-content: center;
+}
+.mobile-options {
+  max-width: 430px;
+  margin: 0 auto 18px;
+  padding: 6px 16px 12px;
+}
+.mobile-options .switch-row {
+  padding: 10px 0;
+}
+
+.phone-preview {
+  position: fixed;
+  right: 20px;
+  bottom: calc(var(--bottom-nav-space, 0px) + 12px);
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 10px 12px;
+  border-radius: 30px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  animation: phone-in 0.35s var(--ease);
+}
+.phone-preview.min {
+  border-radius: 22px;
+  padding-bottom: 10px;
+}
+@keyframes phone-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+.phone-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px 0 10px;
+}
+.phone-preview-title {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.phone-preview-title i {
+  color: var(--accent);
+  margin-right: 4px;
+}
+.phone-preview-title small {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+.phone-preview-title small.on {
+  color: var(--accent);
+}
+.phone-preview-hint {
+  margin: 0 6px;
+  max-width: 380px;
+  font-size: 0.74rem;
+  color: var(--text-sub);
+}
+.phone-shell {
+  position: relative;
+  padding: 10px;
+  border-radius: 34px;
+  background: #111;
+  box-shadow: inset 0 0 0 2px #333;
+  overflow: hidden;
+}
+.phone-shell iframe {
+  display: block;
+  border: 0;
+  border-radius: 26px;
+  transform-origin: top left;
+  background: var(--surface);
+}
+@media (max-width: 640px) {
+  .phone-preview {
+    left: 50%;
+    right: auto;
+    bottom: 12px;
+    transform: translateX(-50%);
+    animation: none;
+  }
+}
+
+/* 미리보기를 켜면 넓은 화면에서는 본문을 왼쪽으로 비켜서 가리지 않게 해요 */
+@media (min-width: 1100px) {
+  html.phone-preview-open body {
+    padding-right: 420px;
+  }
 }

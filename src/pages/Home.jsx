@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useApp } from '../lib/store.jsx'
 import { LargeTitle, useTopbarTitle } from '../components/Shell.jsx'
 import { scrollTop } from '../lib/router.js'
-import { Sheet } from '../components/ui.jsx'
+import { Sheet, Switch } from '../components/ui.jsx'
 import { Fields } from '../components/Fields.jsx'
 import { COMMON_WIDGET_FIELDS, WIDGETS } from '../widgets/index.jsx'
 import { DEFAULT_HOME } from '../lib/defaults.js'
 import { uid } from '../lib/format.js'
+import { IN_PREVIEW, hasMobileLayout, useIsMobile } from '../lib/device.js'
+import { PhonePreview } from './HomePreview.jsx'
 
 const SIZE_LABEL = { S: '작게', M: '중간', L: '크게' }
 
@@ -38,7 +40,24 @@ export default function Home() {
   const { site, theme } = app
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(null)
-  const home = editing ? draft : app.home
+  const [previewHome, setPreviewHome] = useState(null)
+  const isMobile = useIsMobile()
+  const source = IN_PREVIEW && previewHome ? previewHome : editing ? draft : app.home
+  // 모바일 화면에서는 '모바일 홈 화면'을 따로 만들어 켜두었다면 그걸 보여줘요.
+  const layoutKey = isMobile && hasMobileLayout(source) ? 'mobile' : 'pc'
+  const home = layoutKey === 'mobile' ? source.mobile : source
+
+  // 미리보기 창 안에서는 편집 중인(저장 전) 홈 화면을 부모 창에서 받아 그려요.
+  useEffect(() => {
+    if (!IN_PREVIEW) return
+    const onMsg = (e) => {
+      if (e.origin !== window.location.origin || e.source !== window.parent) return
+      if (e.data?.type === 'od-home-preview') setPreviewHome(e.data.home)
+    }
+    window.addEventListener('message', onMsg)
+    window.parent.postMessage({ type: 'od-preview-ready' }, window.location.origin)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
 
   useTopbarTitle(theme.homeTitle ? undefined : site.title)
 
@@ -72,14 +91,15 @@ export default function Home() {
   const quickUpdate = useCallback(
     async (pageIdx, widgetIdx, config) => {
       const next = JSON.parse(JSON.stringify(app.home))
-      next.pages[pageIdx].widgets[widgetIdx].config = config
+      const target = layoutKey === 'mobile' ? next.mobile : next
+      target.pages[pageIdx].widgets[widgetIdx].config = config
       try {
         await app.saveSetting('home', next)
       } catch (e) {
         app.showToast(e.message)
       }
     },
-    [app],
+    [app, layoutKey],
   )
 
   return (
@@ -93,11 +113,11 @@ export default function Home() {
         />
       )}
       {editing ? (
-        <HomeEditor draft={draft} setDraft={setDraft} onCancel={() => setEditing(false)} onSave={saveDraft} />
+        <HomeEditor draft={draft} setDraft={setDraft} startTarget={layoutKey} onCancel={() => setEditing(false)} onSave={saveDraft} />
       ) : (
-        <HomePages home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin ? quickUpdate : null} fixed={fixed} admin={app.admin} align={theme.homeAlign || 'top'} />
+        <HomePages key={layoutKey} home={home} layout={theme.homeLayout} dots={theme.dots} dotsPosition={theme.dotsPosition} onQuickUpdate={app.admin && !IN_PREVIEW ? quickUpdate : null} fixed={fixed} admin={app.admin} align={theme.homeAlign || 'top'} />
       )}
-      {app.admin && !editing && (
+      {app.admin && !editing && !IN_PREVIEW && (
         <button type="button" className="fab" onClick={startEdit} aria-label="홈 화면 편집">
           <i className="fa-solid fa-pen-to-square" />
           <span>홈 편집</span>
@@ -339,17 +359,58 @@ function WidgetGrid({ page, pageIdx, onQuickUpdate }) {
 /* 홈 화면 편집                                                          */
 /* ------------------------------------------------------------------ */
 
-function HomeEditor({ draft, setDraft, onCancel, onSave }) {
+// 다른 배치로 복사할 때 위젯·페이지 id를 새로 붙여요.
+function cloneLayout(pages) {
+  return JSON.parse(JSON.stringify(pages || [])).map((p) => ({ ...p, id: uid('page'), widgets: (p.widgets || []).map((w) => ({ ...w, id: uid('w') })) }))
+}
+
+function HomeEditor({ draft, setDraft, startTarget = 'pc', onCancel, onSave }) {
   const [picker, setPicker] = useState(null) // 위젯을 추가할 페이지 번호
   const [editingWidget, setEditingWidget] = useState(null) // { pageIdx, widgetIdx }
   const [dragFrom, setDragFrom] = useState(null)
+  // 'pc' = 기본(PC·태블릿) 홈 화면, 'mobile' = 휴대폰에서만 보이는 홈 화면
+  const [target, setTarget] = useState(startTarget)
+  const [preview, setPreview] = useState(() => {
+    try {
+      const saved = localStorage.getItem('od-phone-preview')
+      return saved ? saved === '1' : window.innerWidth >= 1280
+    } catch {
+      return window.innerWidth >= 1280
+    }
+  })
+  const togglePreview = () =>
+    setPreview((v) => {
+      try {
+        localStorage.setItem('od-phone-preview', v ? '0' : '1')
+      } catch {
+        // 무시
+      }
+      return !v
+    })
 
+  const mobileReady = !!draft.mobile?.pages
+  const layout = target === 'mobile' ? draft.mobile : draft
+
+  // fn(배치, 전체) — 지금 편집 중인 배치(PC 또는 모바일)의 pages를 고쳐요.
   const update = (fn) =>
+    setDraft((d) => {
+      const next = JSON.parse(JSON.stringify(d))
+      fn(target === 'mobile' ? next.mobile : next, next)
+      return next
+    })
+  const updateAll = (fn) =>
     setDraft((d) => {
       const next = JSON.parse(JSON.stringify(d))
       fn(next)
       return next
     })
+
+  function switchTarget(t) {
+    setTarget(t)
+    setEditingWidget(null)
+    setPicker(null)
+    setDragFrom(null)
+  }
 
   function moveWidget(from, to) {
     update((d) => {
@@ -366,10 +427,10 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
     if (type === 'shortcut') w.size = 'S'
     update((d) => d.pages[pageIdx].widgets.push(w))
     setPicker(null)
-    setEditingWidget({ pageIdx, widgetIdx: draft.pages[pageIdx].widgets.length })
+    setEditingWidget({ pageIdx, widgetIdx: layout.pages[pageIdx].widgets.length })
   }
 
-  const current = editingWidget && draft.pages[editingWidget.pageIdx]?.widgets[editingWidget.widgetIdx]
+  const current = layout && editingWidget && layout.pages[editingWidget.pageIdx]?.widgets[editingWidget.widgetIdx]
 
   return (
     <div className="home-editor">
@@ -378,11 +439,32 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
           <strong>홈 화면 편집</strong>
           <span>위젯을 끌어서 옮기거나, 버튼으로 순서·크기를 바꿔보세요.</span>
         </div>
+        <div className="segmented small home-target-pick" role="radiogroup" aria-label="편집할 홈 화면">
+          {[
+            ['pc', 'PC', 'fa-solid fa-desktop'],
+            ['mobile', '모바일', 'fa-solid fa-mobile-screen-button'],
+          ].map(([v, label, icon]) => (
+            <button type="button" key={v} role="radio" aria-checked={target === v} className={target === v ? 'active' : ''} onClick={() => switchTarget(v)}>
+              <i className={icon} /> {label}
+              {v === 'mobile' && <em className={`target-state ${hasMobileLayout(draft) ? 'on' : ''}`}>{hasMobileLayout(draft) ? '따로' : 'PC와 같음'}</em>}
+            </button>
+          ))}
+        </div>
         <div className="row gap-s">
+          <button type="button" className={`btn small ${preview ? 'tonal' : 'ghost'}`} onClick={togglePreview} aria-pressed={preview} title="휴대폰 화면 미리보기">
+            <i className="fa-solid fa-mobile-screen" /> 미리보기
+          </button>
           <button
             type="button"
             className="btn small ghost"
-            onClick={() => window.confirm('기본 홈 화면으로 되돌릴까요? (저장 전까지는 반영되지 않아요)') && setDraft(JSON.parse(JSON.stringify(DEFAULT_HOME)))}
+            disabled={!layout}
+            onClick={() => {
+              if (target === 'mobile') {
+                if (window.confirm('모바일 홈 화면을 지금의 PC 배치로 다시 맞출까요? (저장 전까지는 반영되지 않아요)')) updateAll((d) => (d.mobile.pages = cloneLayout(d.pages)))
+              } else if (window.confirm('PC 홈 화면을 기본 배치로 되돌릴까요? 모바일 홈 화면은 그대로 둬요. (저장 전까지는 반영되지 않아요)')) {
+                updateAll((d) => (d.pages = cloneLayout(DEFAULT_HOME.pages)))
+              }
+            }}
           >
             초기화
           </button>
@@ -395,7 +477,43 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
         </div>
       </div>
 
-      {draft.pages.map((page, pi) => (
+      {target === 'mobile' && !mobileReady ? (
+        <div className="mobile-setup card">
+          <span className="mobile-setup-icon">
+            <i className="fa-solid fa-mobile-screen-button" />
+          </span>
+          <h3>휴대폰 전용 홈 화면</h3>
+          <p>지금은 휴대폰에서도 PC 홈 화면이 그대로(좁게) 보여요. 휴대폰에서만 보일 배치를 따로 만들 수 있어요.</p>
+          <div className="row gap-s wrap center">
+            <button type="button" className="btn primary" onClick={() => updateAll((d) => (d.mobile = { enabled: true, pages: cloneLayout(d.pages) }))}>
+              <i className="fa-solid fa-copy" /> PC 배치 복사해서 시작
+            </button>
+            <button type="button" className="btn" onClick={() => updateAll((d) => (d.mobile = { enabled: true, pages: [{ id: uid('page'), widgets: [] }] }))}>
+              빈 화면으로 시작
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+      {target === 'mobile' && (
+        <div className="mobile-options card">
+          <Switch
+            checked={draft.mobile.enabled !== false}
+            onChange={(v) => updateAll((d) => (d.mobile.enabled = v))}
+            label="휴대폰에서 이 홈 화면 쓰기"
+            description="끄면 휴대폰에서도 PC 홈 화면을 보여줘요. 만들어둔 배치는 지워지지 않아요."
+          />
+          <button
+            type="button"
+            className="btn small ghost danger"
+            onClick={() => window.confirm('모바일 홈 화면을 지울까요? 휴대폰에서도 PC 홈 화면이 보여요. (저장 전까지는 반영되지 않아요)') && updateAll((d) => delete d.mobile)}
+          >
+            <i className="fa-solid fa-trash" /> 모바일 배치 지우기
+          </button>
+        </div>
+      )}
+      <div className={`edit-pages target-${target}`}>
+      {layout.pages.map((page, pi) => (
         <section key={page.id} className="edit-page">
           <div className="edit-page-head">
             <span className="edit-page-name">{pi + 1}페이지</span>
@@ -431,7 +549,7 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
               <button
                 type="button"
                 className="icon-btn small"
-                disabled={pi === draft.pages.length - 1}
+                disabled={pi === layout.pages.length - 1}
                 onClick={() => update((d) => d.pages.splice(pi + 1, 0, d.pages.splice(pi, 1)[0]))}
                 aria-label="페이지 뒤로"
               >
@@ -440,7 +558,7 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
               <button
                 type="button"
                 className="icon-btn small danger"
-                disabled={draft.pages.length === 1}
+                disabled={layout.pages.length === 1}
                 onClick={() => window.confirm(`${pi + 1}페이지와 위젯을 모두 지울까요?`) && update((d) => d.pages.splice(pi, 1))}
                 aria-label="페이지 삭제"
               >
@@ -533,9 +651,15 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
         </section>
       ))}
 
+      </div>
+
       <button type="button" className="btn block" onClick={() => update((d) => d.pages.push({ id: uid('page'), widgets: [] }))}>
         <i className="fa-solid fa-plus" /> 페이지 추가
       </button>
+        </>
+      )}
+
+      {preview && <PhonePreview home={draft} target={target} onClose={togglePreview} />}
 
       {picker !== null && (
         <Sheet title="위젯 추가" onClose={() => setPicker(null)} wide>
@@ -556,12 +680,12 @@ function HomeEditor({ draft, setDraft, onCancel, onSave }) {
         <WidgetSettings
           widget={current}
           pageIdx={editingWidget.pageIdx}
-          pageCount={draft.pages.length}
+          pageCount={layout.pages.length}
           onClose={() => setEditingWidget(null)}
           onChange={(w) => update((d) => (d.pages[editingWidget.pageIdx].widgets[editingWidget.widgetIdx] = w))}
-          onMovePage={(target) => {
-            moveWidget({ pageIdx: editingWidget.pageIdx, widgetIdx: editingWidget.widgetIdx }, { pageIdx: target, widgetIdx: draft.pages[target].widgets.length })
-            setEditingWidget({ pageIdx: target, widgetIdx: draft.pages[target].widgets.length - (target === editingWidget.pageIdx ? 1 : 0) })
+          onMovePage={(to) => {
+            moveWidget({ pageIdx: editingWidget.pageIdx, widgetIdx: editingWidget.widgetIdx }, { pageIdx: to, widgetIdx: layout.pages[to].widgets.length })
+            setEditingWidget({ pageIdx: to, widgetIdx: layout.pages[to].widgets.length - (to === editingWidget.pageIdx ? 1 : 0) })
           }}
         />
       )}

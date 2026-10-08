@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { IN_PREVIEW } from '../lib/device.js'
 import { youtubeId } from '../lib/format.js'
 import { useApp } from '../lib/store.jsx'
 
@@ -101,14 +102,14 @@ export function BgmProvider({ children }) {
 
   // 1) 미리 준비: 사이트를 열면 잠시 뒤 플레이어만 불러와 둬요. (소리는 나지 않아요)
   useEffect(() => {
-    if (!tracks.length || site.bgmPreload === false) return
+    if (!tracks.length || site.bgmPreload === false || IN_PREVIEW) return
     const t = setTimeout(() => ensurePlayer().catch(() => {}), 1500)
     return () => clearTimeout(t)
   }, [tracks.length, site.bgmPreload, ensurePlayer])
 
   // 2) 첫 클릭/터치 때 자동 재생 (브라우저는 사용자가 한 번 누르기 전엔 소리를 못 내게 막아요)
   useEffect(() => {
-    if (!tracks.length || !site.bgmAutoplay) return
+    if (!tracks.length || !site.bgmAutoplay || IN_PREVIEW) return
     const start = (e) => {
       if (startedRef.current || e.target.closest?.('.bgm-card, .bgm-video')) return
       startedRef.current = true
