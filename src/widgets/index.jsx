@@ -62,6 +62,8 @@ function ProfileWidget({ config }) {
   const mode = config.mode || 'pair'
   const layout = config.layout || 'row'
   const days = daysSince(pair.startDate)
+  // 페어 순서: 기본은 '최애 × 나' (위젯 설정에서 '나 × 최애'로 바꿀 수 있어요)
+  const [first, second] = config.order === 'me-first' ? [pair.me, pair.partner] : [pair.partner, pair.me]
   const Avatar = ({ who }) => (
     <div className="avatar" style={{ '--ring': who.color || 'var(--accent)' }}>
       {who.image ? <img src={who.image} alt={who.name} /> : <span>{(who.name || '?').slice(0, 1)}</span>}
@@ -71,22 +73,22 @@ function ProfileWidget({ config }) {
     <div className={`profile-widget layout-${layout} mode-${mode}`}>
       {config.cover && <div className="profile-cover" style={{ backgroundImage: `url("${config.cover}")` }} />}
       <div className="profile-avatars">
-        <Avatar who={mode === 'partner' ? pair.partner : pair.me} />
+        <Avatar who={mode === 'pair' ? first : mode === 'partner' ? pair.partner : pair.me} />
         {mode === 'pair' && (
           <>
             <span className="profile-symbol" style={{ color: pair.symbolColor || undefined, background: pair.symbolBg || undefined }}>
               <i className={pair.symbol || 'fa-solid fa-heart'} />
             </span>
-            <Avatar who={pair.partner} />
+            <Avatar who={second} />
           </>
         )}
       </div>
       <div className="profile-text">
         <strong className="profile-name">
-          {mode === 'pair' ? pair.pairName || `${pair.me.name} × ${pair.partner.name}` : mode === 'partner' ? pair.partner.name : pair.me.name}
+          {mode === 'pair' ? pair.pairName || `${first.name} × ${second.name}` : mode === 'partner' ? pair.partner.name : pair.me.name}
         </strong>
         <span className="profile-sub">
-          {mode === 'pair' ? [pair.me.sub, pair.partner.sub].filter(Boolean).join(' · ') : mode === 'partner' ? pair.partner.sub : pair.me.sub}
+          {mode === 'pair' ? [first.sub, second.sub].filter(Boolean).join(' · ') : mode === 'partner' ? pair.partner.sub : pair.me.sub}
         </span>
         {config.showBio !== false && pair.bio && <p className="profile-bio">{pair.bio}</p>}
       </div>
@@ -794,13 +796,24 @@ export const WIDGETS = {
     Component: ProfileWidget,
     fields: [
       { key: 'mode', label: '표시', type: 'segmented', options: [{ value: 'pair', label: '페어' }, { value: 'me', label: '나' }, { value: 'partner', label: '상대' }] },
+      {
+        key: 'order',
+        label: '순서 (페어일 때)',
+        type: 'segmented',
+        show: (c) => (c.mode || 'pair') === 'pair',
+        options: [
+          { value: 'partner-first', label: '최애 × 나' },
+          { value: 'me-first', label: '나 × 최애' },
+        ],
+        help: '사진·이름·아이디 순서가 함께 바뀌어요. 관리 › 사이트의 "페어 이름"을 직접 적었다면 그 글자는 그대로예요.',
+      },
       { key: 'layout', label: '배치', type: 'segmented', options: [{ value: 'row', label: '가로' }, { value: 'center', label: '가운데' }, { value: 'cover', label: '커버' }] },
       { key: 'cover', label: '커버 이미지', type: 'image', guide: 'profileCover', show: (c) => c.layout === 'cover' },
       { key: 'showBio', label: '소개글 보이기', type: 'toggle' },
       { key: 'showStats', label: '함께한 날 · 기록 수 보이기', type: 'toggle' },
     ],
     help: '이름·사진·소개글은 관리 > 사이트에서 바꿀 수 있어요.',
-    defaults: { mode: 'pair', layout: 'row', showBio: true, showStats: true },
+    defaults: { mode: 'pair', order: 'partner-first', layout: 'row', showBio: true, showStats: true },
   },
   shortcut: {
     label: '앱 아이콘 (바로가기)',

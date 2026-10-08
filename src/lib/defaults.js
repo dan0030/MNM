@@ -6,7 +6,7 @@ export const DEFAULT_SITE = {
   description: '드림 페어 아카이브',
   favicon: '💌',
   pair: {
-    pairName: '나 × 최애',
+    pairName: '최애 × 나',
     bio: '둘만의 이야기를 차곡차곡 모아두는 곳',
     me: { name: '나', sub: '@me', image: '', color: '#ff8fab' },
     partner: { name: '최애', sub: '@partner', image: '', color: '#6c9cff' },
