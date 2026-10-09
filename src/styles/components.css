@@ -2000,15 +2000,28 @@ textarea.code,
 
 .banner-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--bb-min, 200px)), 1fr));
+  gap: var(--bb-gap, 14px);
 }
 .banner-board.small {
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
+  --bb-min: 120px;
+  gap: var(--bb-gap, 8px);
+}
+/* 한 줄에 몇 개를 정했을 때 */
+.banner-board.cols {
+  grid-template-columns: repeat(var(--bb-cols), minmax(0, 1fr));
+}
+@media (max-width: 640px) {
+  .banner-board.cols-m {
+    grid-template-columns: repeat(var(--bb-cols-m), minmax(0, 1fr));
+  }
+  .banner-board.cols:not(.cols-m) {
+    grid-template-columns: repeat(min(var(--bb-cols), 2), minmax(0, 1fr));
+  }
 }
 .banner-board-item {
   margin: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2022,6 +2035,9 @@ textarea.code,
 .banner-board-item a:hover {
   transform: translateY(-2px);
 }
+.banner-board-item a {
+  max-width: 100%;
+}
 .banner-board-item img {
   display: block;
   max-width: 100%;
@@ -2029,6 +2045,18 @@ textarea.code,
   border-radius: 4px;
   image-rendering: auto;
 }
+/* 칸에 꽉 채우기 */
+.banner-board.fit-fill .banner-board-item a,
+.banner-board.fit-fill .banner-board-item img {
+  width: 100%;
+}
+/* 크기 직접 정하기 (칸보다 크면 칸에 맞춰 줄어요) */
+.banner-board.fit-fixed .banner-board-item img {
+  width: var(--bb-w, auto);
+  height: var(--bb-h, auto);
+  object-fit: cover;
+}
+
 .banner-board-text {
   display: inline-block;
   padding: 10px 16px;

@@ -13,9 +13,30 @@ export function absoluteUrl(u) {
   }
 }
 
-export function BannerGrid({ banners, size = 'normal' }) {
+// opts: { columns, columnsMobile, fit: 'original' | 'fill' | 'fixed', width, height, gap, caption }
+export function bannerGridStyle(opts = {}) {
+  const cols = Number(opts.columns) || 0
+  const colsM = Number(opts.columnsMobile) || 0
+  const w = Number(opts.width) || 0
+  const h = Number(opts.height) || 0
+  const style = {}
+  if (cols) style['--bb-cols'] = cols
+  if (colsM) style['--bb-cols-m'] = colsM
+  if (opts.fit === 'fixed' && w) {
+    style['--bb-w'] = `${w}px`
+    style['--bb-min'] = `${w}px`
+  }
+  if (opts.fit === 'fixed' && h) style['--bb-h'] = `${h}px`
+  if (opts.gap !== undefined && opts.gap !== '') style['--bb-gap'] = `${Number(opts.gap) || 0}px`
+  return style
+}
+
+export function BannerGrid({ banners, size = 'normal', opts = {} }) {
+  const cols = Number(opts.columns) || 0
+  const showCaption = opts.caption !== false && size !== 'small'
+  const cls = ['banner-board', size, cols ? 'cols' : 'auto', Number(opts.columnsMobile) ? 'cols-m' : '', `fit-${opts.fit || 'original'}`].filter(Boolean).join(' ')
   return (
-    <div className={`banner-board ${size}`}>
+    <div className={cls} style={bannerGridStyle(opts)}>
       {banners.map((b, i) => {
         const img = b.image ? <img src={b.image} alt={b.name || ''} loading="lazy" /> : <span className="banner-board-text">{b.name}</span>
         return (
@@ -27,7 +48,7 @@ export function BannerGrid({ banners, size = 'normal' }) {
             ) : (
               img
             )}
-            {(b.name || b.desc) && size !== 'small' && (
+            {(b.name || b.desc) && showCaption && (
               <figcaption>
                 {b.name && <strong>{b.name}</strong>}
                 {b.desc && <span>{b.desc}</span>}
@@ -87,7 +108,7 @@ export default function BannersPage() {
       {banners.length ? (
         <section className="card padded">
           <h2 className="section-title small">링크 배너</h2>
-          <BannerGrid banners={banners} />
+          <BannerGrid banners={banners} opts={site.bannerBoard || {}} />
         </section>
       ) : (
         <Empty icon="fa-solid fa-flag" title="아직 등록된 배너가 없어요">

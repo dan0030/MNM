@@ -797,7 +797,7 @@ function BannerBoardWidget({ config }) {
           전체 <i className="fa-solid fa-chevron-right" />
         </a>
       </WidgetTitle>
-      {banners.length ? <BannerGrid banners={banners} size="small" /> : <Placeholder icon="fa-solid fa-flag">관리 › 배너 게시판에서 배너를 등록해주세요</Placeholder>}
+      {banners.length ? <BannerGrid banners={banners} size="small" opts={{ ...config, caption: false }} /> : <Placeholder icon="fa-solid fa-flag">관리 › 배너 게시판에서 배너를 등록해주세요</Placeholder>}
     </>
   )
 }
@@ -1179,9 +1179,25 @@ export const WIDGETS = {
     icon: 'fa-solid fa-flag',
     sizes: ['M', 'L'],
     Component: BannerBoardWidget,
-    fields: [{ key: 'count', label: '최대 개수', type: 'number', min: 1, max: 60 }],
+    fields: [
+      { key: 'count', label: '최대 개수', type: 'number', min: 1, max: 60 },
+      { key: 'columns', label: '한 줄에 몇 개', type: 'select', options: [{ value: '', label: '자동' }, ...[1, 2, 3, 4, 5, 6, 8].map((n) => ({ value: n, label: `${n}개` }))] },
+      {
+        key: 'fit',
+        label: '배너 크기',
+        type: 'segmented',
+        options: [
+          { value: 'original', label: '원본' },
+          { value: 'fill', label: '칸에 꽉' },
+          { value: 'fixed', label: '직접' },
+        ],
+      },
+      { key: 'width', label: '배너 가로', type: 'range', min: 40, max: 400, unit: 'px', show: (c) => c.fit === 'fixed' },
+      { key: 'height', label: '배너 세로 (0이면 비율대로)', type: 'range', min: 0, max: 200, unit: 'px', show: (c) => c.fit === 'fixed' },
+      { key: 'gap', label: '간격', type: 'range', min: 0, max: 30, unit: 'px' },
+    ],
     help: '배너는 관리 › 배너 게시판에서 등록해요.',
-    defaults: { title: '배너', count: 12 },
+    defaults: { title: '배너', count: 12, columns: '', fit: 'original', width: 120, height: 0, gap: 8 },
   },
   spacer: {
     label: '빈칸 (여백)',

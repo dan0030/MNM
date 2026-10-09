@@ -26,6 +26,7 @@ export const DEFAULT_SITE = {
   banners: [],
   myBanner: { image: '', url: '', alt: '', note: '' },
   bannerIntro: '함께해 주시는 분들의 배너예요.',
+  bannerBoard: { columns: '', columnsMobile: '', fit: 'original', width: 200, height: 0, gap: 14, caption: true },
   bottomNav: [
     { label: '홈', icon: 'fa-solid fa-house', href: '/' },
     { label: '기록', icon: 'fa-solid fa-book-open', href: '/archive' },

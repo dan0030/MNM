@@ -383,6 +383,33 @@ export const DESIGN_SECTIONS = [
 export const BANNER_FIELDS = [
   { type: 'heading', label: '배너 게시판', help: '메뉴의 "배너"에서 보이는 페이지예요.' },
   { key: 'bannerIntro', label: '안내 문구' },
+  { type: 'heading', label: '배너 보이는 모양', help: '배너 게시판 페이지의 링크 배너 목록에 적용돼요. (홈의 배너 게시판 위젯은 위젯 설정에서 따로 정해요)' },
+  {
+    key: 'bannerBoard.columns',
+    label: '한 줄에 몇 개',
+    type: 'select',
+    options: [{ value: '', label: '자동 (배너 크기에 맞춰)' }, ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ value: n, label: `${n}개` }))],
+  },
+  {
+    key: 'bannerBoard.columnsMobile',
+    label: '휴대폰에서 한 줄에 몇 개',
+    type: 'select',
+    options: [{ value: '', label: '자동 (위와 같게, 최대 2개)' }, ...[1, 2, 3, 4].map((n) => ({ value: n, label: `${n}개` }))],
+  },
+  {
+    key: 'bannerBoard.fit',
+    label: '배너 크기',
+    type: 'segmented',
+    options: [
+      { value: 'original', label: '원본 크기' },
+      { value: 'fill', label: '칸에 꽉 채우기' },
+      { value: 'fixed', label: '직접 정하기' },
+    ],
+  },
+  { key: 'bannerBoard.width', label: '배너 가로 (px)', type: 'range', min: 40, max: 600, unit: 'px', show: (v) => v.bannerBoard?.fit === 'fixed' },
+  { key: 'bannerBoard.height', label: '배너 세로 (px, 0이면 비율대로)', type: 'range', min: 0, max: 300, unit: 'px', show: (v) => v.bannerBoard?.fit === 'fixed' },
+  { key: 'bannerBoard.gap', label: '배너 사이 간격', type: 'range', min: 0, max: 40, unit: 'px' },
+  { key: 'bannerBoard.caption', label: '배너 아래 이름·설명 보이기', type: 'toggle' },
   { type: 'heading', label: '우리 배너', help: '다른 사람이 퍼갈 수 있게 HTML 코드와 함께 보여줘요.' },
   { key: 'myBanner.image', label: '배너 이미지', type: 'image', guide: 'linkBanner', uploadOptions: { maxSize: 600, keepPng: true }, help: '흔히 200×40, 88×31 같은 작은 크기를 써요. GIF 움짤도 그대로 올라가요.' },
   { key: 'myBanner.url', label: '연결 주소 (비우면 이 사이트)' },
