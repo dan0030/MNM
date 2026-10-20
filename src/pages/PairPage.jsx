@@ -134,6 +134,7 @@ function PairOverview({ config, base, empty, admin }) {
   const { site } = useApp()
   const [hover, setHover] = useState(null)
   const nameGroup = useFitGroup()
+  const [worldOpen, setWorldOpen] = useState(false)
   const go = (i) => navigate(`${base}?c=${i}`)
 
   const side = (i) => {
@@ -167,7 +168,7 @@ function PairOverview({ config, base, empty, admin }) {
   }
 
   return (
-    <section className={`pair-overview ${hover !== null ? `hover-${hover}` : ''}`}>
+    <section className={`pair-overview ${hover !== null ? `hover-${hover}` : ''} ${config.worldWiki ? 'has-world' : ''}`}>
       <div className="pair-col left">{side(0)}</div>
       <div className="pair-stage">
         {config.chars.map((ch, i) => (
@@ -195,15 +196,32 @@ function PairOverview({ config, base, empty, admin }) {
             </span>
           </button>
         ))}
-        {(config.eyebrow || config.title || config.subtitle) && (
-          <div className="pair-heading">
-            {config.eyebrow && <span className="pair-eyebrow">{config.eyebrow}</span>}
-            {config.title && <h1 className="pair-title">{swapNames(config.title, site)}</h1>}
-            {config.subtitle && <p className="pair-subtitle">{swapNames(config.subtitle, site)}</p>}
+        {(config.eyebrow || config.title || config.subtitle || config.worldWiki) && (
+          <div className="pair-under">
+            {(config.eyebrow || config.title || config.subtitle) && (
+              <div className="pair-heading">
+                {config.eyebrow && <span className="pair-eyebrow">{config.eyebrow}</span>}
+                {config.title && <h1 className="pair-title">{swapNames(config.title, site)}</h1>}
+                {config.subtitle && <p className="pair-subtitle">{swapNames(config.subtitle, site)}</p>}
+              </div>
+            )}
+            {config.worldWiki && (
+              <button type="button" className="pair-wiki-btn pair-world-btn" onClick={() => setWorldOpen(true)}>
+                <span className="pair-wiki-icon">
+                  <i className="fa-solid fa-earth-asia" />
+                </span>
+                <span className="pair-wiki-text">
+                  <strong>{config.worldWikiTitle || '세계관 위키'}</strong>
+                  <small>눌러서 펼쳐보기</small>
+                </span>
+                <i className="fa-solid fa-chevron-right" />
+              </button>
+            )}
           </div>
         )}
       </div>
       <div className="pair-col right">{side(1)}</div>
+      {worldOpen && <WikiModal title={config.worldWikiTitle || '세계관 위키'} html={config.worldWiki} onClose={() => setWorldOpen(false)} />}
       {empty && admin && <p className="pair-empty-hint">오른쪽 아래 '페어 편집'에서 두 사람의 이름과 전신 이미지를 넣어주세요.</p>}
     </section>
   )
@@ -458,6 +476,20 @@ function PairEditor({ initial, startTab, onClose, onSave }) {
         <>
           <p className="sheet-help">첫 화면 가운데 아래에 들어가는 제목이에요. 두 사람의 내용은 위 탭에서 각각 적어요. ({'{{나}}'} {'{{상대}}'} 이름 변환을 쓸 수 있어요)</p>
           <Fields fields={PAGE_FIELDS} value={draft} onChange={(v) => setDraft((d) => ({ ...d, ...v, chars: d.chars }))} />
+          <div className="fields">
+            <h3 className="fields-heading">세계관 위키</h3>
+            <div className="field">
+              <label className="field-label" htmlFor="world-wiki-title">
+                버튼 제목
+              </label>
+              <input id="world-wiki-title" value={draft.worldWikiTitle || ''} onChange={(e) => setDraft((d) => ({ ...d, worldWikiTitle: e.target.value }))} placeholder="세계관 위키" />
+            </div>
+            <div className="field">
+              <span className="field-label">세계관 위키 내용</span>
+              <p className="field-help">첫 화면 페어 이름 아래 버튼을 누르면 팝업으로 펼쳐져요. 'HTML' 버튼으로 바꾸면 위키 코드를 그대로 붙여넣을 수 있어요. 비우면 버튼이 숨겨져요.</p>
+              <RichEditor value={draft.worldWiki || ''} onChange={(v) => setDraft((d) => ({ ...d, worldWiki: v }))} mode={draft.worldWikiMode || 'rich'} onModeChange={(m) => setDraft((d) => ({ ...d, worldWikiMode: m }))} />
+            </div>
+          </div>
         </>
       ) : (
         <div key={ci}>
