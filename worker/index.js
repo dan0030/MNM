@@ -1,12 +1,12 @@
 import { ensureSchema } from './schema.js'
-import { allReferencedKeys, deleteFile, difference, extractKeys, keysOfPosts, keysOfSetting, migrateToR2, removeUnused } from './files.js'
+import { allReferencedKeys, deleteFile, difference, extractKeys, keysOfCategories, keysOfPosts, keysOfSetting, migrateToR2, removeUnused } from './files.js'
 import { checkPassword, hashPassword, randomId, safeEqual, sign, verify } from './crypto.js'
 
 const SESSION_COOKIE = 'od_session'
 const SESSION_DAYS = 30
 const SETTING_KEYS = ['site', 'theme', 'home']
 // 카테고리 페이지 종류: posts(일반 게시판) · thread(타임라인 타래). 새 종류는 여기에 추가해요.
-const PAGE_TYPES = ['posts', 'thread']
+const PAGE_TYPES = ['posts', 'thread', 'pair']
 const MAX_SETTING_BYTES = 512 * 1024
 const D1_FILE_LIMIT = 1_900_000
 const R2_FILE_LIMIT = 25 * 1024 * 1024
@@ -221,8 +221,30 @@ async function handleApi(request, env, ctx, url) {
 
   if (path === '/categories' && method === 'PUT') {
     requireAdmin()
-    await saveCategories(db, await readJson(request))
+    const removedKeys = await saveCategories(db, await readJson(request))
+    if (removedKeys.size) ctx.waitUntil(removeUnused(env, [...removedKeys]))
     return json({ categories: await listCategories(db, admin) })
+  }
+
+  // 특수 페이지(페어 소개 등)의 내용
+  if ((m = path.match(/^\/categories\/(\d+)\/config$/))) {
+    const id = Number(m[1])
+    if (method === 'GET') {
+      const row = await db.prepare('SELECT config, hidden FROM categories WHERE id = ?').bind(id).first()
+      if (!row || (row.hidden && !admin)) throw new HttpError(404, '페이지를 찾을 수 없어요.')
+      return json({ config: parseJson(row.config, {}) })
+    }
+    if (method === 'PUT') {
+      requireAdmin()
+      const text = await request.text()
+      if (text.length > MAX_SETTING_BYTES) throw new HttpError(413, '페이지 내용이 너무 커요.')
+      if (parseJson(text, undefined) === undefined) throw new HttpError(400, '페이지 내용 형식이 올바르지 않아요.')
+      const before = await keysOfCategories(db, [id])
+      const res = await db.prepare('UPDATE categories SET config = ? WHERE id = ?').bind(text, id).run()
+      if (!res.meta.changes) throw new HttpError(404, '페이지를 찾을 수 없어요.')
+      ctx.waitUntil(removeUnused(env, difference(before, extractKeys(text))))
+      return json({ ok: true })
+    }
   }
 
   if (path === '/posts' && method === 'GET') return json(await listPosts(db, admin, url.searchParams))
@@ -400,7 +422,8 @@ async function listCategories(db, admin) {
       GROUP BY c.id
       ORDER BY c.sort_order, c.id`)
     .all()
-  return results
+  // 페이지 내용(config)은 클 수 있어서 목록에는 빼고, 그 페이지를 열 때 따로 불러와요.
+  return results.map(({ config, ...c }) => ({ ...c, has_config: !!config }))
 }
 
 async function saveCategories(db, list) {
@@ -436,6 +459,7 @@ async function saveCategories(db, list) {
 
   const keepIds = prepared.filter((c) => c.id).map((c) => c.id)
   const removed = existing.filter((c) => !keepIds.includes(c.id)).map((c) => c.id)
+  const removedKeys = await keysOfCategories(db, removed)
   const stmts = []
   for (const id of removed) {
     stmts.push(db.prepare('DELETE FROM categories WHERE id = ?').bind(id))
@@ -465,6 +489,7 @@ async function saveCategories(db, list) {
         .bind(c.name, c.slug, c.icon, c.description, c.list_style, c.page_type, parentId, c.sort_order, c.hidden, c.id)
     }),
   )
+  return removedKeys
 }
 
 /* ------------------------------------------------------------------ */
@@ -915,7 +940,7 @@ async function importAll(db, data) {
     return db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`).bind(...cols.map((c) => row[c] ?? null))
   }
   for (const s of data.settings || []) if (SETTING_KEYS.includes(s.key)) stmts.push(insert('settings', s, ['key', 'value']))
-  for (const c of data.categories || []) stmts.push(insert('categories', c, ['id', 'name', 'slug', 'icon', 'description', 'list_style', 'page_type', 'parent_id', 'sort_order', 'hidden']))
+  for (const c of data.categories || []) stmts.push(insert('categories', c, ['id', 'name', 'slug', 'icon', 'description', 'list_style', 'page_type', 'parent_id', 'sort_order', 'hidden', 'config']))
   for (const p of data.posts || [])
     stmts.push(
       insert('posts', p, [

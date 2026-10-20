@@ -25,6 +25,15 @@ export async function keysOfPosts(db, ids) {
   return extractKeys(...results.flatMap((r) => [r.content, r.thumbnail, r.extra]))
 }
 
+export async function keysOfCategories(db, ids) {
+  if (!ids.length) return new Set()
+  const { results } = await db
+    .prepare(`SELECT config FROM categories WHERE id IN (${ids.map(() => '?').join(',')})`)
+    .bind(...ids)
+    .all()
+  return extractKeys(...results.map((r) => r.config))
+}
+
 export async function keysOfSetting(db, key) {
   const row = await db.prepare('SELECT value FROM settings WHERE key = ?').bind(key).first()
   return extractKeys(row?.value)
@@ -38,6 +47,7 @@ async function isReferenced(db, key) {
       `SELECT
         EXISTS (SELECT 1 FROM posts WHERE content LIKE ?1 OR thumbnail LIKE ?1 OR extra LIKE ?1) OR
         EXISTS (SELECT 1 FROM settings WHERE value LIKE ?1) OR
+        EXISTS (SELECT 1 FROM categories WHERE config LIKE ?1) OR
         EXISTS (SELECT 1 FROM comments WHERE body LIKE ?1) AS used`,
     )
     .bind(like)
@@ -72,14 +82,16 @@ export function difference(before, after) {
 
 // 사이트 전체에서 쓰이는 파일 목록 (관리 화면의 "사용 중" 표시용)
 export async function allReferencedKeys(db) {
-  const [posts, settings, comments] = await Promise.all([
+  const [posts, settings, comments, cats] = await Promise.all([
     db.prepare('SELECT content, thumbnail, extra FROM posts').all(),
     db.prepare('SELECT value FROM settings').all(),
     db.prepare("SELECT body FROM comments WHERE body LIKE '%/files/%'").all(),
+    db.prepare('SELECT config FROM categories WHERE config IS NOT NULL').all(),
   ])
   return extractKeys(
     ...posts.results.flatMap((r) => [r.content, r.thumbnail, r.extra]),
     ...settings.results.map((r) => r.value),
+    ...cats.results.map((r) => r.config),
     ...comments.results.map((r) => r.body),
   )
 }

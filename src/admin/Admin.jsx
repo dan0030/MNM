@@ -396,7 +396,7 @@ function CategoriesTab() {
           </span>
           <button type="button" className="cat-edit-name" onClick={() => setOpen(isOpen ? null : c.key)} aria-expanded={isOpen}>
             {c.name}
-            {c.page_type === 'thread' ? <small className="badge">타래</small> : null}
+            {c.page_type === 'thread' ? <small className="badge">타래</small> : c.page_type === 'pair' ? <small className="badge">페어</small> : null}
             {c.hidden ? <small> (숨김)</small> : null}
             <small className="muted"> · 글 {c.count || 0}</small>
           </button>

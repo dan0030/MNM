@@ -1,0 +1,710 @@
+/* ==================================================================
+   캐릭터 페어 페이지
+   ================================================================== */
+
+/* 이 페이지는 본문 창을 넓게 써요 */
+html.page-wide .page,
+html.page-wide .page.framed,
+html.page-wide .topbar-inner {
+  max-width: min(1440px, 100%);
+}
+
+.pair-page {
+  --pc: var(--accent);
+  padding-top: 8px;
+}
+.pair-page button {
+  font: inherit;
+  color: inherit;
+}
+
+/* 공통 글자 */
+.pair-tagline {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--text-sub);
+  line-height: 1.5;
+}
+.pair-name {
+  display: block;
+  margin: 6px 0 2px;
+  font-family: var(--heading-font), var(--font), sans-serif;
+  font-size: clamp(2.4rem, 5.2vw, 5.4rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+  transition: color 0.3s;
+}
+.pair-subname {
+  display: block;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  color: var(--text-sub);
+}
+.pair-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+.pair-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--pc);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1;
+}
+.pair-intro {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-sub);
+  white-space: pre-line;
+}
+
+/* ---------------- 첫 화면 ---------------- */
+
+.pair-overview {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 1fr);
+  grid-template-areas: 'left stage right';
+  gap: clamp(16px, 3vw, 44px);
+  align-items: start;
+  padding: clamp(8px, 3vw, 36px) 0 24px;
+}
+.pair-col.left {
+  grid-area: left;
+}
+.pair-col.right {
+  grid-area: right;
+}
+.pair-stage {
+  grid-area: stage;
+}
+
+.pair-side {
+  display: block;
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.pair-col.right .pair-side {
+  text-align: right;
+}
+.pair-col.right .pair-keywords {
+  justify-content: flex-end;
+}
+.pair-side.is-hover .pair-name {
+  color: var(--pc);
+}
+
+.pair-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.pair-panel {
+  position: relative;
+  display: block;
+  aspect-ratio: 5 / 8;
+  max-height: calc(100vh - 140px);
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 32px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--pc-bg, linear-gradient(180deg, color-mix(in srgb, var(--pc) 8%, var(--surface)), color-mix(in srgb, var(--pc) 26%, var(--surface))));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease), filter 0.45s var(--ease), opacity 0.45s;
+}
+.pair-panel img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transition: transform 0.6s var(--ease);
+}
+.pair-panel.is-hover {
+  transform: translateY(-6px);
+  box-shadow: 0 32px 70px rgba(0, 0, 0, 0.2);
+}
+.pair-panel.is-hover img {
+  transform: scale(1.03);
+}
+.pair-overview.hover-0 .panel-1,
+.pair-overview.hover-1 .panel-0 {
+  filter: saturate(0.6) brightness(0.96);
+  opacity: 0.82;
+}
+.pair-overview.hover-0 .side-1,
+.pair-overview.hover-1 .side-0 {
+  opacity: 0.5;
+}
+.pair-side {
+  transition: opacity 0.4s;
+}
+.pair-panel-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  color: color-mix(in srgb, var(--pc) 45%, transparent);
+}
+.pair-panel-more {
+  position: absolute;
+  left: 50%;
+  top: 18px;
+  transform: translate(-50%, -6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 0.8rem;
+  font-weight: 750;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s var(--ease);
+}
+.pair-panel.is-hover .pair-panel-more,
+.pair-panel:focus-visible .pair-panel-more {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* 가운데 아래 페어 제목 */
+.pair-heading {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 14px 26px 16px;
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  pointer-events: none;
+}
+.pair-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  color: var(--text-sub);
+}
+.pair-title {
+  margin: 4px 0 2px;
+  font-size: clamp(1.4rem, 2.6vw, 2.3rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.pair-subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-sub);
+}
+.pair-empty-hint {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 0.88rem;
+}
+
+@media (hover: none) {
+  .pair-panel-more {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* 좁은 화면: 이미지 두 장을 위에, 이름은 그 아래 양쪽에 */
+@media (max-width: 900px) {
+  .pair-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'stage stage'
+      'left right';
+    gap: 18px 14px;
+  }
+  .pair-stage {
+    gap: 10px;
+  }
+  .pair-panel {
+    border-radius: 24px;
+    max-height: 64vh;
+  }
+  .pair-name {
+    font-size: clamp(1.9rem, 8vw, 3rem);
+  }
+  .pair-heading {
+    bottom: 12px;
+    padding: 10px 18px 12px;
+    border-radius: 20px;
+  }
+  .pair-panel-more {
+    top: 12px;
+    padding: 6px 11px;
+    font-size: 0.72rem;
+  }
+}
+
+/* ---------------- 상세 화면 ---------------- */
+
+.pair-detail {
+  animation: pair-in 0.45s var(--ease);
+}
+@keyframes pair-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.pair-detail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.pair-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pair-switch {
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.pair-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-sub) !important;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s;
+}
+.pair-switch button.active {
+  background: var(--surface);
+  color: var(--text) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.pair-switch-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--pc);
+}
+
+.pair-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(20px, 4vw, 56px);
+  align-items: start;
+}
+.pair-figure {
+  justify-self: center;
+  width: 100%;
+  position: sticky;
+  top: calc(var(--topbar-h, 56px) + 16px);
+  aspect-ratio: 5 / 8;
+  max-height: calc(100vh - 120px);
+  border-radius: 32px;
+  overflow: hidden;
+  background: var(--pc-bg, linear-gradient(180deg, color-mix(in srgb, var(--pc) 8%, var(--surface)), color-mix(in srgb, var(--pc) 26%, var(--surface))));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+}
+.pair-figure img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  animation: pair-figure-in 0.7s var(--ease);
+}
+@keyframes pair-figure-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+.pair-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding-top: 8px;
+}
+.pair-info-head .pair-name {
+  margin-top: 8px;
+}
+.pair-info > .pair-keywords {
+  margin-top: 0;
+}
+.pair-info > .pair-intro {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.pair-wiki-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px 14px 14px;
+  border: var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease);
+}
+.pair-wiki-btn:hover {
+  transform: translateY(-2px);
+}
+.pair-wiki-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  background: var(--pc);
+  color: #fff;
+  font-size: 1.05rem;
+}
+.pair-wiki-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pair-wiki-text small {
+  color: var(--text-sub);
+  font-size: 0.78rem;
+}
+.pair-wiki-btn > .fa-chevron-right {
+  color: var(--text-sub);
+  font-size: 0.8rem;
+}
+
+.pair-card {
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: var(--card-border);
+  box-shadow: var(--card-shadow);
+}
+.pair-card-title {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--pc);
+}
+.pair-profile {
+  margin: 0;
+}
+.pair-profile-row {
+  display: flex;
+  gap: 16px;
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+.pair-profile-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.pair-profile-row:last-child {
+  padding-bottom: 0;
+}
+.pair-profile dt {
+  flex: none;
+  width: 96px;
+  color: var(--text-sub);
+  font-size: 0.88rem;
+}
+.pair-profile dd {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.pair-status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pair-status-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+.pair-status-head strong {
+  color: var(--pc);
+  font-variant-numeric: tabular-nums;
+}
+.pair-status-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--pc) 15%, transparent);
+  overflow: hidden;
+}
+.pair-status-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pc);
+  transform-origin: left;
+  animation: pair-bar 0.9s var(--ease);
+}
+@keyframes pair-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.pair-next {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 18px 12px 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--pc) 12%, var(--surface));
+  text-align: left;
+  cursor: pointer;
+}
+.pair-next img {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  background: color-mix(in srgb, var(--pc) 20%, var(--surface));
+}
+.pair-next span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.pair-next small {
+  font-size: 0.76rem;
+  color: var(--text-sub);
+}
+.pair-next strong {
+  font-size: 1.05rem;
+}
+.pair-next > i {
+  color: var(--pc);
+}
+
+@media (max-width: 900px) {
+  .pair-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pair-figure {
+    position: relative;
+    top: 0;
+    width: min(100%, 420px);
+    max-height: 62vh;
+    margin: 0 auto;
+    border-radius: 26px;
+  }
+}
+
+/* ---------------- 위키 팝업 ---------------- */
+
+.wiki-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: wiki-fade 0.25s ease;
+}
+@keyframes wiki-fade {
+  from {
+    opacity: 0;
+  }
+}
+.wiki-window {
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100%);
+  height: min(86vh, 960px);
+  border-radius: 28px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  animation: wiki-pop 0.35s var(--ease);
+}
+@keyframes wiki-pop {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+}
+.wiki-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.wiki-head strong {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.02rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-head-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.wiki-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 22px 28px 40px;
+}
+@media (max-width: 640px) {
+  .wiki-backdrop {
+    padding: 0;
+    place-items: stretch;
+  }
+  .wiki-window {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    animation: wiki-up 0.35s var(--ease);
+  }
+  @keyframes wiki-up {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+  }
+  .wiki-head {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .wiki-body {
+    padding: 18px 18px 40px;
+  }
+}
+
+/* ---------------- 편집 ---------------- */
+
+.pair-edit-tabs {
+  width: 100%;
+  margin-bottom: 16px;
+}
+.pair-edit-tabs button {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kw-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.kw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px 5px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.kw-chip button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+  font-size: 0.7rem;
+}
+.kw-input input {
+  flex: 1 1 140px;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 6px;
+}

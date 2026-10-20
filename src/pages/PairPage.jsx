@@ -1,0 +1,522 @@
+import React, { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { swapNames, useApp } from '../lib/store.jsx'
+import { api } from '../lib/api.js'
+import { navigate } from '../lib/router.js'
+import { Content } from '../components/Content.jsx'
+import { Fields } from '../components/Fields.jsx'
+import { RichEditor } from '../editor/RichEditor.jsx'
+import { Sheet, Spinner } from '../components/ui.jsx'
+
+// 페어 소개 페이지
+// 첫 화면: 두 사람의 전신 이미지 + 간단 소개·키워드  →  이미지를 누르면 각자의 상세 화면(?c=0 / ?c=1)
+// 상세 화면: 프로필 · 스테이터스 · 성격 키워드 · 소개글 · 위키 문서(팝업)
+// 내용은 카테고리의 config(JSON)에 저장돼요.
+
+function emptyChar(name = '', color = '') {
+  return {
+    name,
+    subName: '',
+    tagline: '',
+    color,
+    image: '',
+    bg: '',
+    keywords: [],
+    intro: '',
+    about: '',
+    profile: [],
+    status: [],
+    wikiTitle: '',
+    wiki: '',
+  }
+}
+
+function defaultConfig(site) {
+  return {
+    eyebrow: 'PAIR ARCHIVE',
+    title: site.pair?.pairName || '',
+    subtitle: '',
+    chars: [emptyChar(site.pair?.partner?.name || '', '#6b7b8f'), emptyChar(site.pair?.me?.name || '', '#a07a68')],
+  }
+}
+
+function normalize(config, site) {
+  const base = defaultConfig(site)
+  const c = { ...base, ...(config || {}) }
+  const chars = Array.isArray(c.chars) ? c.chars : []
+  c.chars = [0, 1].map((i) => ({ ...base.chars[i], ...(chars[i] || {}) }))
+  return c
+}
+
+function charStyle(ch) {
+  const style = {}
+  if (ch.color) style['--pc'] = ch.color
+  if (ch.bg) style['--pc-bg'] = ch.bg
+  return style
+}
+
+export default function PairPage({ category, search }) {
+  const app = useApp()
+  const [raw, setRaw] = useState(null)
+  const [error, setError] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const sp = new URLSearchParams(search)
+  const sel = sp.get('c')
+  const idx = sel === '0' || sel === '1' ? Number(sel) : null
+
+  useEffect(() => {
+    let alive = true
+    setRaw(null)
+    api
+      .categoryConfig(category.id)
+      .then((res) => alive && setRaw(res.config || {}))
+      .catch((e) => alive && setError(e.message))
+    return () => {
+      alive = false
+    }
+  }, [category.id])
+
+  const config = useMemo(() => (raw ? normalize(raw, app.site) : null), [raw, app.site])
+
+  // 이 페이지는 넓게 써요. (본문 창 너비 설정보다 넓게)
+  useEffect(() => {
+    document.documentElement.classList.add('page-wide')
+    return () => document.documentElement.classList.remove('page-wide')
+  }, [])
+  const base = `/category/${encodeURIComponent(category.slug)}`
+
+  useEffect(() => {
+    if (!config) return
+    const ch = idx !== null ? config.chars[idx] : null
+    document.title = `${ch ? ch.name || ch.subName : config.title || category.name} :: ${app.site.title}`
+  }, [config, idx, category.name, app.site.title])
+
+  if (error) return <p className="form-error">{error}</p>
+  if (!config) return <Spinner />
+
+  const empty = !config.chars.some((c) => c.image || c.name)
+
+  return (
+    <div className="pair-page">
+      {idx === null ? (
+        <PairOverview config={config} base={base} empty={empty} admin={app.admin} />
+      ) : (
+        <PairDetail key={idx} config={config} idx={idx} base={base} />
+      )}
+      {app.admin && (
+        <button type="button" className="fab" onClick={() => setEditing(true)} aria-label="페어 페이지 편집">
+          <i className="fa-solid fa-pen-to-square" />
+          <span>페어 편집</span>
+        </button>
+      )}
+      {editing && (
+        <PairEditor
+          initial={config}
+          startTab={idx === null ? 'page' : String(idx)}
+          onClose={() => setEditing(false)}
+          onSave={async (next) => {
+            await api.saveCategoryConfig(category.id, next)
+            setRaw(next)
+            app.showToast('페어 페이지를 저장했어요.')
+            setEditing(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+/* ---------------- 첫 화면 ---------------- */
+
+function PairOverview({ config, base, empty, admin }) {
+  const { site } = useApp()
+  const [hover, setHover] = useState(null)
+  const go = (i) => navigate(`${base}?c=${i}`)
+
+  const side = (i) => {
+    const ch = config.chars[i]
+    return (
+      <button
+        type="button"
+        className={`pair-side side-${i} ${hover === i ? 'is-hover' : ''}`}
+        style={charStyle(ch)}
+        onClick={() => go(i)}
+        onMouseEnter={() => setHover(i)}
+        onMouseLeave={() => setHover(null)}
+        onFocus={() => setHover(i)}
+        onBlur={() => setHover(null)}
+      >
+        {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
+        <strong className="pair-name">{ch.name || `캐릭터 ${i + 1}`}</strong>
+        {ch.subName && <span className="pair-subname">{ch.subName}</span>}
+        {ch.keywords?.length > 0 && (
+          <span className="pair-keywords">
+            {ch.keywords.map((k, j) => (
+              <span key={j} className="pair-chip">
+                {k}
+              </span>
+            ))}
+          </span>
+        )}
+        {ch.intro && <span className="pair-intro">{swapNames(ch.intro, site)}</span>}
+      </button>
+    )
+  }
+
+  return (
+    <section className={`pair-overview ${hover !== null ? `hover-${hover}` : ''}`}>
+      <div className="pair-col left">{side(0)}</div>
+      <div className="pair-stage">
+        {config.chars.map((ch, i) => (
+          <button
+            type="button"
+            key={i}
+            className={`pair-panel panel-${i} ${hover === i ? 'is-hover' : ''}`}
+            style={charStyle(ch)}
+            onClick={() => go(i)}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            aria-label={`${ch.name || ch.subName || `캐릭터 ${i + 1}`} 자세히 보기`}
+          >
+            {ch.image ? <img src={ch.image} alt="" /> : <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>}
+            <span className="pair-panel-more">
+              자세히 보기 <i className="fa-solid fa-arrow-right" />
+            </span>
+          </button>
+        ))}
+        {(config.eyebrow || config.title || config.subtitle) && (
+          <div className="pair-heading">
+            {config.eyebrow && <span className="pair-eyebrow">{config.eyebrow}</span>}
+            {config.title && <h1 className="pair-title">{swapNames(config.title, site)}</h1>}
+            {config.subtitle && <p className="pair-subtitle">{swapNames(config.subtitle, site)}</p>}
+          </div>
+        )}
+      </div>
+      <div className="pair-col right">{side(1)}</div>
+      {empty && admin && <p className="pair-empty-hint">오른쪽 아래 '페어 편집'에서 두 사람의 이름과 전신 이미지를 넣어주세요.</p>}
+    </section>
+  )
+}
+
+/* ---------------- 상세 화면 ---------------- */
+
+function PairDetail({ config, idx, base }) {
+  const { site } = useApp()
+  const ch = config.chars[idx]
+  const other = config.chars[1 - idx]
+  const [wikiOpen, setWikiOpen] = useState(false)
+
+  return (
+    <section className="pair-detail" style={charStyle(ch)}>
+      <div className="pair-detail-bar">
+        <button type="button" className="pair-back" onClick={() => navigate(base)}>
+          <i className="fa-solid fa-chevron-left" /> {config.title ? swapNames(config.title, site) : '페어'}
+        </button>
+        <div className="pair-switch" role="tablist" aria-label="캐릭터 바꾸기">
+          {config.chars.map((c, i) => (
+            <button type="button" role="tab" key={i} aria-selected={i === idx} className={i === idx ? 'active' : ''} style={charStyle(c)} onClick={() => navigate(`${base}?c=${i}`, { replace: true })}>
+              <span className="pair-switch-dot" />
+              {c.name || c.subName || `캐릭터 ${i + 1}`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="pair-detail-grid">
+        <div className="pair-figure">
+          {ch.image ? <img src={ch.image} alt={ch.name || ch.subName || ''} /> : <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>}
+        </div>
+
+        <div className="pair-info">
+          <header className="pair-info-head">
+            {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
+            <h1 className="pair-name">{ch.name || `캐릭터 ${idx + 1}`}</h1>
+            {ch.subName && <span className="pair-subname">{ch.subName}</span>}
+          </header>
+
+          {ch.keywords?.length > 0 && (
+            <div className="pair-keywords">
+              {ch.keywords.map((k, j) => (
+                <span key={j} className="pair-chip">
+                  {k}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {ch.intro && <p className="pair-intro">{swapNames(ch.intro, site)}</p>}
+
+          {ch.wiki && (
+            <button type="button" className="pair-wiki-btn" onClick={() => setWikiOpen(true)}>
+              <span className="pair-wiki-icon">
+                <i className="fa-solid fa-book-open" />
+              </span>
+              <span className="pair-wiki-text">
+                <strong>{ch.wikiTitle || '위키 문서'}</strong>
+                <small>눌러서 펼쳐보기</small>
+              </span>
+              <i className="fa-solid fa-chevron-right" />
+            </button>
+          )}
+
+          {ch.profile?.some((p) => p.label || p.value) && (
+            <div className="pair-card">
+              <h2 className="pair-card-title">프로필</h2>
+              <dl className="pair-profile">
+                {ch.profile
+                  .filter((p) => p.label || p.value)
+                  .map((p, j) => (
+                    <div key={j} className="pair-profile-row">
+                      <dt>{p.label}</dt>
+                      <dd>{swapNames(p.value || '', site)}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </div>
+          )}
+
+          {ch.status?.some((s) => s.label) && (
+            <div className="pair-card">
+              <h2 className="pair-card-title">스테이터스</h2>
+              <ul className="pair-status">
+                {ch.status
+                  .filter((s) => s.label)
+                  .map((s, j) => {
+                    const max = Number(s.max) || 100
+                    const val = Math.max(0, Math.min(max, Number(s.value) || 0))
+                    return (
+                      <li key={j}>
+                        <div className="pair-status-head">
+                          <span>{s.label}</span>
+                          <strong>{s.grade || `${val}${max === 100 ? '' : ` / ${max}`}`}</strong>
+                        </div>
+                        <div className="pair-status-bar" role="meter" aria-valuemin={0} aria-valuemax={max} aria-valuenow={val} aria-label={s.label}>
+                          <span style={{ width: `${(val / max) * 100}%` }} />
+                        </div>
+                      </li>
+                    )
+                  })}
+              </ul>
+            </div>
+          )}
+
+          {ch.about && (
+            <div className="pair-card">
+              <h2 className="pair-card-title">소개</h2>
+              <Content html={ch.about} />
+            </div>
+          )}
+
+          <button type="button" className="pair-next" style={charStyle(other)} onClick={() => navigate(`${base}?c=${1 - idx}`, { replace: true })}>
+            {other.image && <img src={other.image} alt="" />}
+            <span>
+              <small>다른 한 사람</small>
+              <strong>{other.name || other.subName || `캐릭터 ${2 - idx}`}</strong>
+            </span>
+            <i className="fa-solid fa-arrow-right" />
+          </button>
+        </div>
+      </div>
+
+      {wikiOpen && <WikiModal title={ch.wikiTitle || `${ch.name || ch.subName} 위키`} html={ch.wiki} onClose={() => setWikiOpen(false)} />}
+    </section>
+  )
+}
+
+function WikiModal({ title, html, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    document.body.classList.add('no-scroll')
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.classList.remove('no-scroll')
+    }
+  }, [onClose])
+  return createPortal(
+    <div className="wiki-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="wiki-window" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="wiki-head">
+          <span className="wiki-head-icon">
+            <i className="fa-solid fa-book-open" />
+          </span>
+          <strong>{title}</strong>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="위키 닫기" autoFocus>
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </div>
+        <div className="wiki-body">
+          <Content html={html} className="prose wiki-prose" />
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+/* ---------------- 편집 ---------------- */
+
+const PAGE_FIELDS = [
+  { key: 'eyebrow', label: '작은 머리글', placeholder: 'PAIR ARCHIVE' },
+  { key: 'title', label: '페어 이름 (가운데 큰 제목)', placeholder: '등대와 철새' },
+  { key: 'subtitle', label: '한 줄 소개', placeholder: '겨울마다 한 번씩, 같은 골목에서.' },
+]
+
+const CHAR_BASIC = [
+  { type: 'heading', label: '기본' },
+  { key: 'name', label: '큰 이름 (영문 추천)', placeholder: 'DOHA' },
+  { key: 'subName', label: '이름 아래 작은 글', placeholder: '이도하' },
+  { key: 'tagline', label: '이름 위 한 줄', placeholder: '밤에만 문을 여는 고서점 주인.' },
+  { key: 'image', label: '전신 이미지', type: 'image', guide: 'fullBody', uploadOptions: { maxSize: 2000, keepPng: true } },
+  { key: 'color', label: '대표 색 (키워드·스테이터스 막대)', type: 'color' },
+  { key: 'bg', label: '이미지 뒤 배경색 (비우면 대표 색을 옅게)', type: 'color' },
+  { key: 'intro', label: '간단 소개 (첫 화면·상세 화면)', type: 'textarea', rows: 2 },
+]
+
+const CHAR_FIELDS = [
+  { type: 'heading', label: '프로필' },
+  {
+    key: 'profile',
+    label: '프로필 항목',
+    type: 'list',
+    itemLabel: '항목',
+    itemFields: [
+      { key: 'label', label: '항목', placeholder: '나이 / 키 / 생일 / 직업' },
+      { key: 'value', label: '내용' },
+    ],
+  },
+  { type: 'heading', label: '스테이터스' },
+  {
+    key: 'status',
+    label: '스테이터스 항목',
+    type: 'list',
+    itemLabel: '스탯',
+    itemFields: [
+      { key: 'label', label: '이름', placeholder: '체력 / 지능 / 매력' },
+      { key: 'value', label: '값', type: 'number', min: 0 },
+      { key: 'max', label: '최대값 (비우면 100)', type: 'number', min: 1 },
+      { key: 'grade', label: '등급 표시 (선택, 예: A+ · ★★★)', placeholder: '비우면 숫자' },
+    ],
+  },
+  { type: 'heading', label: '위키 문서' },
+  { key: 'wikiTitle', label: '위키 버튼 제목', placeholder: '위키 문서' },
+]
+
+function PairEditor({ initial, startTab, onClose, onSave }) {
+  const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(initial)))
+  const [tab, setTab] = useState(startTab)
+  const [busy, setBusy] = useState(false)
+  const setChar = (i, patch) => setDraft((d) => ({ ...d, chars: d.chars.map((c, j) => (j === i ? { ...c, ...patch } : c)) }))
+  const ci = tab === 'page' ? null : Number(tab)
+  const ch = ci !== null ? draft.chars[ci] : null
+
+  async function save() {
+    setBusy(true)
+    try {
+      await onSave(draft)
+    } catch (e) {
+      window.alert(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Sheet
+      title="페어 페이지 편집"
+      onClose={onClose}
+      wide
+      footer={
+        <div className="row gap-s" style={{ width: '100%' }}>
+          <button type="button" className="btn" onClick={onClose} style={{ flex: 1 }}>
+            취소
+          </button>
+          <button type="button" className="btn primary" onClick={save} disabled={busy} style={{ flex: 2 }}>
+            {busy ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      }
+    >
+      <div className="segmented pair-edit-tabs" role="tablist">
+        {[
+          ['page', '페이지'],
+          ['0', draft.chars[0].name || draft.chars[0].subName || '왼쪽 캐릭터'],
+          ['1', draft.chars[1].name || draft.chars[1].subName || '오른쪽 캐릭터'],
+        ].map(([v, label]) => (
+          <button type="button" key={v} role="tab" aria-selected={tab === v} className={tab === v ? 'active' : ''} onClick={() => setTab(v)}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {ci === null ? (
+        <>
+          <p className="sheet-help">첫 화면 가운데 아래에 들어가는 제목이에요. 두 사람의 내용은 위 탭에서 각각 적어요. ({'{{나}}'} {'{{상대}}'} 이름 변환을 쓸 수 있어요)</p>
+          <Fields fields={PAGE_FIELDS} value={draft} onChange={(v) => setDraft((d) => ({ ...d, ...v, chars: d.chars }))} />
+        </>
+      ) : (
+        <div key={ci}>
+          <Fields fields={CHAR_BASIC} value={ch} onChange={(v) => setChar(ci, v)} />
+          <div className="fields">
+            <div className="field">
+              <span className="field-label">성격 키워드</span>
+              <KeywordsInput value={ch.keywords || []} onChange={(v) => setChar(ci, { keywords: v })} />
+              <p className="field-help">입력하고 Enter나 쉼표(,)를 누르면 하나씩 들어가요.</p>
+            </div>
+          </div>
+          <Fields fields={CHAR_FIELDS} value={ch} onChange={(v) => setChar(ci, v)} />
+          <div className="fields">
+            <div className="field">
+              <span className="field-label">위키 문서 내용</span>
+              <p className="field-help">위키 버튼을 누르면 팝업으로 펼쳐져요. 'HTML' 버튼으로 바꾸면 위키 코드(HTML·&lt;style&gt;)를 그대로 붙여넣을 수 있어요. 비우면 위키 버튼이 숨겨져요.</p>
+              <RichEditor value={ch.wiki || ''} onChange={(v) => setChar(ci, { wiki: v })} mode={ch.wikiMode || 'rich'} onModeChange={(m) => setChar(ci, { wikiMode: m })} />
+            </div>
+            <div className="field">
+              <span className="field-label">소개글</span>
+              <p className="field-help">상세 화면 아래쪽 '소개' 카드에 보여요.</p>
+              <RichEditor value={ch.about || ''} onChange={(v) => setChar(ci, { about: v })} mode={ch.aboutMode || 'rich'} onModeChange={(m) => setChar(ci, { aboutMode: m })} />
+            </div>
+          </div>
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
+// 키워드: 입력하고 Enter나 쉼표(,)를 누르면 칩으로 들어가요. (띄어쓰기도 쓸 수 있어요)
+function KeywordsInput({ value, onChange }) {
+  const [text, setText] = useState('')
+  const add = () => {
+    const parts = text
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    if (parts.length) onChange([...value, ...parts.filter((p) => !value.includes(p))])
+    setText('')
+  }
+  return (
+    <div className="kw-input">
+      {value.map((k, i) => (
+        <span key={i} className="kw-chip">
+          {k}
+          <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} aria-label={`${k} 지우기`}>
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </span>
+      ))}
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            add()
+          } else if (e.key === 'Backspace' && !text && value.length) onChange(value.slice(0, -1))
+        }}
+        onBlur={add}
+        placeholder={value.length ? '키워드 더하기' : '예: 차분함 (Enter로 추가)'}
+        aria-label="키워드 입력"
+      />
+    </div>
+  )
+}

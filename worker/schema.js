@@ -68,6 +68,8 @@ const MIGRATIONS = [
   `ALTER TABLE categories ADD COLUMN page_type TEXT NOT NULL DEFAULT 'posts'`,
   `ALTER TABLE posts ADD COLUMN thread_id INTEGER`,
   `CREATE INDEX IF NOT EXISTS idx_posts_thread ON posts (thread_id, published_at)`,
+  // 페어 소개 같은 특수 페이지의 내용(JSON)
+  `ALTER TABLE categories ADD COLUMN config TEXT`,
 ]
 
 let ready = null

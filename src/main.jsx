@@ -7,5 +7,6 @@ import './styles/base.css'
 import './styles/components.css'
 import './styles/widgets.css'
 import './styles/content.css'
+import './styles/pair.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />)

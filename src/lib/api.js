@@ -34,6 +34,8 @@ export const api = {
   logout: () => request('POST', '/logout'),
   saveSetting: (key, value) => request('PUT', `/settings/${key}`, value),
   saveCategories: (list) => request('PUT', '/categories', list),
+  categoryConfig: (id) => request('GET', `/categories/${id}/config`),
+  saveCategoryConfig: (id, config) => request('PUT', `/categories/${id}/config`, config),
 
   posts: (params) => request('GET', `/posts${qs(params)}`),
   post: (id) => request('GET', `/posts/${id}`),

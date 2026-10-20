@@ -20,6 +20,7 @@ export const IMAGE_GUIDES = {
   pageHeader: { label: '페이지 제목 위 이미지', ratio: null, size: [640, 320], where: '관리 › 페이지 문구', note: '최대 가로 320px·세로 160px 안에 맞춰 보여요. 배경이 투명한 PNG가 잘 어울려요.' },
   linkBanner: { label: '링크 배너', ratio: 5, size: [200, 40], where: '배너 게시판', note: '200×40이 가장 흔하고, 88×31(작은 배너)도 많이 써요. 움짤은 GIF 그대로 올려주세요.' },
   cursor: { label: '마우스 커서', ratio: 1, size: [32, 32], where: '디자인 › 커서', note: '32×32 이하, 투명 배경 PNG.' },
+  fullBody: { label: '캐릭터 전신 이미지', ratio: null, size: [1000, 1600], where: '캐릭터 페어 페이지', note: '세로로 긴 전신 이미지(약 5:8)가 가장 잘 어울려요. 배경을 지운 투명 PNG면 대표 색 배경 위에 자연스럽게 올라가요.' },
   post: { label: '글 속 사진', ratio: null, size: [1600, null], where: '글쓰기 본문', note: '가로 1600px이면 넉넉해요. 더 크면 자동으로 줄여요.' },
 }
 
