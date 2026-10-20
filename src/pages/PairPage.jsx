@@ -133,6 +133,7 @@ export default function PairPage({ category, search }) {
 function PairOverview({ config, base, empty, admin }) {
   const { site } = useApp()
   const [hover, setHover] = useState(null)
+  const nameGroup = useFitGroup()
   const go = (i) => navigate(`${base}?c=${i}`)
 
   const side = (i) => {
@@ -149,7 +150,7 @@ function PairOverview({ config, base, empty, admin }) {
         onBlur={() => setHover(null)}
       >
         {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
-        <FitName className="pair-name" text={ch.name || `캐릭터 ${i + 1}`} />
+        <FitName className="pair-name" text={ch.name || `캐릭터 ${i + 1}`} group={nameGroup} />
         {ch.subName && <span className="pair-subname">{ch.subName}</span>}
         {ch.keywords?.length > 0 && (
           <span className="pair-keywords">
@@ -531,21 +532,46 @@ function KeywordsInput({ value, onChange }) {
 }
 
 // 이름이 칸보다 길면 줄바꿈하지 않고 글자 크기를 줄여서 한 줄에 맞춰요.
-function FitName({ text, as: Tag = 'strong', className = '' }) {
+// 같은 group에 묶인 이름들은 가장 많이 줄어야 하는 쪽에 맞춰 같은 비율로 함께 줄어요.
+function fitBoxes(boxes) {
+  boxes.forEach((b) => (b.style.fontSize = ''))
+  const sizes = boxes.map((b) => parseFloat(getComputedStyle(b).fontSize) || 48)
+  let ratio = 1
+  for (const b of boxes) {
+    const avail = b.clientWidth
+    const need = b.firstChild?.getBoundingClientRect().width || 0
+    if (avail > 0 && need > avail) ratio = Math.min(ratio, avail / need)
+  }
+  if (ratio < 1) boxes.forEach((b, i) => (b.style.fontSize = `${Math.max(14, Math.floor(sizes[i] * ratio * 0.98))}px`))
+}
+
+function useFitGroup() {
+  const ref = useRef(null)
+  if (!ref.current) {
+    const els = new Set()
+    const fitAll = () => fitBoxes([...els])
+    ref.current = {
+      fitAll,
+      add(el) {
+        els.add(el)
+        fitAll()
+        return () => {
+          els.delete(el)
+          fitAll()
+        }
+      },
+    }
+  }
+  return ref.current
+}
+
+function FitName({ text, as: Tag = 'strong', className = '', group }) {
   const boxRef = useRef(null)
-  const textRef = useRef(null)
   useLayoutEffect(() => {
     const box = boxRef.current
-    const inner = textRef.current
-    if (!box || !inner) return
-    const fit = () => {
-      box.style.fontSize = ''
-      const max = parseFloat(getComputedStyle(box).fontSize) || 48
-      const avail = box.clientWidth
-      const need = inner.getBoundingClientRect().width
-      if (avail > 0 && need > avail) box.style.fontSize = `${Math.max(14, Math.floor(max * (avail / need) * 0.98))}px`
-    }
-    fit()
+    if (!box) return
+    const fit = group ? group.fitAll : () => fitBoxes([box])
+    const off = group ? group.add(box) : (fit(), null)
     let w = box.clientWidth
     const ro = new ResizeObserver(() => {
       if (box.clientWidth !== w) {
@@ -555,11 +581,14 @@ function FitName({ text, as: Tag = 'strong', className = '' }) {
     })
     ro.observe(box)
     document.fonts?.ready?.then(fit)
-    return () => ro.disconnect()
-  }, [text])
+    return () => {
+      ro.disconnect()
+      off?.()
+    }
+  }, [text, group])
   return (
     <Tag ref={boxRef} className={`${className} fit-name`}>
-      <span ref={textRef}>{text}</span>
+      <span>{text}</span>
     </Tag>
   )
 }

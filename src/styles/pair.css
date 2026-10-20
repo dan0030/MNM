@@ -21,13 +21,14 @@ html.page-wide .topbar-inner {
 /* 공통 글자 */
 .pair-tagline {
   display: block;
+  margin-bottom: 14px;
   font-size: 0.86rem;
   color: var(--text-sub);
   line-height: 1.5;
 }
 .pair-name {
   display: block;
-  margin: 6px 0 2px;
+  margin: 0;
   font-family: var(--heading-font), var(--font), sans-serif;
   font-size: clamp(2.4rem, 5.2vw, 5.4rem);
   font-weight: 900;
@@ -44,6 +45,7 @@ html.page-wide .topbar-inner {
 }
 .pair-subname {
   display: block;
+  margin-top: 12px;
   font-size: 0.95rem;
   letter-spacing: 0.22em;
   color: var(--text-sub);
@@ -52,26 +54,37 @@ html.page-wide .topbar-inner {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 20px;
 }
+/* 대표 색이 옅어도 읽히도록 옅은 바탕 + 진한 글자 */
 .pair-chip {
   display: inline-flex;
   align-items: center;
-  padding: 7px 13px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: var(--pc);
-  color: #fff;
-  font-size: 0.84rem;
-  font-weight: 750;
-  line-height: 1;
+  border: 1px solid color-mix(in srgb, var(--pc) 38%, transparent);
+  background: color-mix(in srgb, var(--pc) 14%, var(--surface));
+  color: color-mix(in srgb, var(--pc) 45%, var(--text));
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 .pair-intro {
   display: block;
-  margin-top: 14px;
-  font-size: 0.92rem;
-  line-height: 1.7;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 0.88rem;
+  line-height: 1.85;
   color: var(--text-sub);
   white-space: pre-line;
+  text-align: justify;
+  text-align-last: left;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.pair-col.right .pair-intro {
+  text-align-last: right;
 }
 
 /* ---------------- 첫 화면 ---------------- */
@@ -111,7 +124,7 @@ html.page-wide .topbar-inner {
   justify-content: flex-end;
 }
 .pair-side.is-hover .pair-name {
-  color: var(--pc);
+  color: color-mix(in srgb, var(--pc) 80%, var(--text));
 }
 
 .pair-stage {
@@ -119,6 +132,7 @@ html.page-wide .topbar-inner {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  margin-bottom: 40px;
 }
 .pair-panel {
   position: relative;
@@ -182,12 +196,12 @@ html.page-wide .topbar-inner {
 }
 .pair-overview.hover-0 .panel-1,
 .pair-overview.hover-1 .panel-0 {
-  filter: saturate(0.6) brightness(0.96);
-  opacity: 0.82;
+  filter: saturate(0.85);
+  opacity: 0.92;
 }
 .pair-overview.hover-0 .side-1,
 .pair-overview.hover-1 .side-0 {
-  opacity: 0.5;
+  opacity: 0.72;
 }
 .pair-side {
   transition: opacity 0.4s;
@@ -221,6 +235,10 @@ html.page-wide .topbar-inner {
   opacity: 0;
   transition: opacity 0.3s, transform 0.3s var(--ease);
 }
+.panel-0 .pair-panel-more {
+  right: auto;
+  left: 14px;
+}
 .pair-panel.is-hover .pair-panel-more,
 .pair-panel:focus-visible .pair-panel-more {
   opacity: 1;
@@ -232,7 +250,8 @@ html.page-wide .topbar-inner {
   position: absolute;
   z-index: 3;
   left: 50%;
-  bottom: 22px;
+  /* 이미지 카드 아래 가장자리에 걸치도록 */
+  bottom: -30px;
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(100% - 32px);
@@ -297,13 +316,25 @@ html.page-wide .topbar-inner {
   .pair-name {
     font-size: clamp(1.9rem, 8vw, 3rem);
   }
+  .pair-stage {
+    margin-bottom: 30px;
+  }
+  /* 좁은 칸에서 양쪽 정렬이 벌어지지 않게 글자 단위로 줄을 바꿔요 */
+  .pair-intro {
+    word-break: break-all;
+    font-size: 0.84rem;
+    line-height: 1.75;
+  }
   .pair-heading {
-    bottom: 12px;
+    bottom: -22px;
     padding: 10px 18px 12px;
     border-radius: 20px;
   }
   .pair-more-text {
     display: none;
+  }
+  .panel-0 .pair-panel-more {
+    left: 10px;
   }
   .pair-panel-more {
     top: 10px;
