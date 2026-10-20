@@ -214,7 +214,6 @@ function PairOverview({ config, base, empty, admin }) {
 function PairDetail({ config, idx, base }) {
   const { site } = useApp()
   const ch = config.chars[idx]
-  const other = config.chars[1 - idx]
   const [wikiOpen, setWikiOpen] = useState(false)
 
   return (
@@ -235,6 +234,7 @@ function PairDetail({ config, idx, base }) {
 
       <div className="pair-detail-grid">
         <div className="pair-figure">
+          <span className="pair-panel-frame" aria-hidden="true" />
           {ch.image ? <img src={ch.image} alt={ch.name || ch.subName || ''} /> : <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>}
         </div>
 
@@ -317,15 +317,6 @@ function PairDetail({ config, idx, base }) {
               <Content html={ch.about} />
             </div>
           )}
-
-          <button type="button" className="pair-next" style={charStyle(other)} onClick={() => navigate(`${base}?c=${1 - idx}`, { replace: true })}>
-            {other.image && <img src={other.image} alt="" />}
-            <span>
-              <small>다른 한 사람</small>
-              <strong>{other.name || other.subName || `캐릭터 ${2 - idx}`}</strong>
-            </span>
-            <i className="fa-solid fa-arrow-right" />
-          </button>
         </div>
       </div>
 

@@ -371,10 +371,9 @@ html.page-wide .topbar-inner {
   align-items: center;
   gap: 8px;
   padding: 9px 16px 9px 12px;
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
   border-radius: 999px;
-  background: var(--surface);
-  box-shadow: var(--card-shadow);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   font-weight: 700;
   cursor: pointer;
 }
@@ -408,7 +407,7 @@ html.page-wide .topbar-inner {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--pc);
+  background: color-mix(in srgb, var(--pc) 85%, var(--text));
 }
 
 .pair-detail-grid {
@@ -432,11 +431,24 @@ html.page-wide .topbar-inner {
 .pair-figure img {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
   animation: pair-figure-in 0.7s var(--ease);
+}
+/* 첫 화면에서 마우스를 올렸을 때의 테두리를 상세 화면에서는 늘 보여줘요 */
+.pair-figure .pair-panel-frame {
+  opacity: 1;
+  transform: none;
+  animation: pair-frame-in 0.6s var(--ease);
+}
+@keyframes pair-frame-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 @keyframes pair-figure-in {
   from {
@@ -445,52 +457,52 @@ html.page-wide .topbar-inner {
   }
 }
 
+/* 오른쪽 정보: 첫 화면과 같은 글자 구성 + 납작한 One UI 카드 */
 .pair-info {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
-  padding-top: 8px;
-}
-.pair-info-head .pair-name {
-  margin-top: 8px;
+  padding-top: 12px;
 }
 .pair-info > .pair-keywords {
-  margin-top: 0;
+  margin-top: 6px;
 }
 .pair-info > .pair-intro {
-  margin: 0;
-  font-size: 1rem;
+  margin: 4px 0 6px;
+  font-size: 0.95rem;
   color: var(--text);
 }
 
+.pair-wiki-btn,
+.pair-card {
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
 .pair-wiki-btn {
   display: flex;
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 14px 18px 14px 14px;
-  border: var(--card-border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  box-shadow: var(--card-shadow);
+  padding: 12px 18px 12px 12px;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.2s var(--ease);
+  transition: background-color 0.2s;
 }
 .pair-wiki-btn:hover {
-  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--pc) 8%, var(--surface));
 }
 .pair-wiki-icon {
   display: grid;
   place-items: center;
   flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 15px;
-  background: var(--pc);
-  color: #fff;
-  font-size: 1.05rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--pc) 16%, var(--surface));
+  color: color-mix(in srgb, var(--pc) 55%, var(--text));
+  font-size: 1rem;
 }
 .pair-wiki-text {
   flex: 1;
@@ -508,18 +520,30 @@ html.page-wide .topbar-inner {
 }
 
 .pair-card {
-  padding: 20px 22px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: var(--card-border);
-  box-shadow: var(--card-shadow);
+  padding: 18px 22px 20px;
 }
 .pair-card-title {
-  margin: 0 0 12px;
-  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--pc);
+  letter-spacing: 0.08em;
+  color: var(--text-sub);
+}
+.pair-card-title::before {
+  content: '';
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--pc) 80%, var(--text));
+}
+.pair-card .prose {
+  font-size: 0.95rem;
+  text-align: justify;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 .pair-profile {
   margin: 0;
@@ -565,20 +589,20 @@ html.page-wide .topbar-inner {
   font-size: 0.9rem;
 }
 .pair-status-head strong {
-  color: var(--pc);
+  color: color-mix(in srgb, var(--pc) 60%, var(--text));
   font-variant-numeric: tabular-nums;
 }
 .pair-status-bar {
   height: 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--pc) 15%, transparent);
+  background: color-mix(in srgb, var(--pc) 15%, var(--surface-2));
   overflow: hidden;
 }
 .pair-status-bar span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--pc);
+  background: color-mix(in srgb, var(--pc) 85%, var(--text));
   transform-origin: left;
   animation: pair-bar 0.9s var(--ease);
 }
@@ -586,44 +610,6 @@ html.page-wide .topbar-inner {
   from {
     transform: scaleX(0);
   }
-}
-
-.pair-next {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  margin-top: 6px;
-  padding: 12px 18px 12px 12px;
-  border: none;
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--pc) 12%, var(--surface));
-  text-align: left;
-  cursor: pointer;
-}
-.pair-next img {
-  flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: top;
-  background: color-mix(in srgb, var(--pc) 20%, var(--surface));
-}
-.pair-next span {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.pair-next small {
-  font-size: 0.76rem;
-  color: var(--text-sub);
-}
-.pair-next strong {
-  font-size: 1.05rem;
-}
-.pair-next > i {
-  color: var(--pc);
 }
 
 @media (max-width: 900px) {
