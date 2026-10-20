@@ -140,8 +140,10 @@ html.page-wide .topbar-inner {
   isolation: isolate;
   display: block;
   aspect-ratio: 5 / 8;
-  max-height: calc(100vh - 140px);
-  width: 100%;
+  --pmaxh: calc(100vh - 140px);
+  max-height: var(--pmaxh);
+  /* 높이 한도에 맞춰 너비도 줄여서 세로로 긴 카드 비율을 지켜요 */
+  width: min(100%, calc(var(--pmaxh) * 5 / 8));
   padding: 0;
   border: none;
   border-radius: 32px;
@@ -272,7 +274,7 @@ html.page-wide .topbar-inner {
 /* 세계관 버튼까지 한 화면에 들어오도록 이미지 카드를 조금 낮게 */
 @media (min-width: 901px) {
   .pair-overview.has-world .pair-panel {
-    max-height: max(400px, calc(100vh - 330px));
+    --pmaxh: max(400px, calc(100vh - 330px));
   }
   /* 카드가 낮아져 폭이 줄어도 두 장이 가운데에 붙어 있게 */
   .pair-overview .panel-0 {
@@ -332,7 +334,7 @@ html.page-wide .topbar-inner {
   }
   .pair-panel {
     border-radius: 24px;
-    max-height: 64vh;
+    --pmaxh: 64vh;
   }
   .pair-name {
     font-size: clamp(1.9rem, 8vw, 3rem);
@@ -792,4 +794,40 @@ html.page-wide .topbar-inner {
 /* 이 페이지는 아래 여백을 좁게 */
 html.page-wide .app .page {
   padding-bottom: calc(var(--bottom-nav-space, 0px) + 28px);
+}
+
+/* 첫 화면: PC에서는 스크롤 없이 한 화면에 */
+@media (min-width: 901px) {
+  html.pair-fixed,
+  html.pair-fixed body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  html.pair-fixed.inner-scroll #root {
+    overflow-y: hidden;
+  }
+  html.pair-fixed .site-footer,
+  html.pair-fixed .scroll-top-btn {
+    display: none;
+  }
+  html.pair-fixed .app .page {
+    padding-bottom: 0;
+  }
+  /* 이미지 카드 + 아래 페어 이름 카드가 창 안에 들어오는 높이 */
+  html.pair-fixed .pair-panel {
+    --pmaxh: max(360px, calc(100vh - 290px));
+  }
+  html.pair-fixed .pair-overview.has-world .pair-panel {
+    --pmaxh: max(320px, calc(100vh - 370px));
+  }
+  /* 소개글이 길면 양옆 글 칸 안에서만 넘겨 봐요 */
+  html.pair-fixed .pair-col {
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  html.pair-fixed .pair-col::-webkit-scrollbar {
+    display: none;
+  }
 }

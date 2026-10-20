@@ -85,6 +85,13 @@ export default function PairPage({ category, search }) {
     document.documentElement.classList.add('page-wide')
     return () => document.documentElement.classList.remove('page-wide')
   }, [])
+
+  // 첫 화면은 PC에서 스크롤 없이 한 화면에 (상세 화면·휴대폰은 스크롤)
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('pair-fixed', idx === null)
+    return () => root.classList.remove('pair-fixed')
+  }, [idx])
   const base = `/category/${encodeURIComponent(category.slug)}`
 
   useEffect(() => {
