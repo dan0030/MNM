@@ -187,8 +187,11 @@ function PairOverview({ config, base, empty, admin }) {
             ) : (
               <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>
             )}
+            {/* 왼쪽 캐릭터는 바깥(왼쪽)을 가리키는 화살표를 글자 왼쪽에 */}
             <span className="pair-panel-more">
-              <span className="pair-more-text">자세히 보기</span> <i className="fa-solid fa-arrow-right" />
+              {i === 0 && <i className="fa-solid fa-arrow-left" />}
+              <span className="pair-more-text">자세히 보기</span>
+              {i !== 0 && <i className="fa-solid fa-arrow-right" />}
             </span>
           </button>
         ))}
