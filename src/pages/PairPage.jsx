@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { swapNames, useApp } from '../lib/store.jsx'
 import { api } from '../lib/api.js'
@@ -15,6 +15,8 @@ import { Sheet, Spinner } from '../components/ui.jsx'
 
 function emptyChar(name = '', color = '') {
   return {
+    zoom: 1.6,
+    focusY: 6,
     name,
     subName: '',
     tagline: '',
@@ -147,7 +149,7 @@ function PairOverview({ config, base, empty, admin }) {
         onBlur={() => setHover(null)}
       >
         {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
-        <strong className="pair-name">{ch.name || `캐릭터 ${i + 1}`}</strong>
+        <FitName className="pair-name" text={ch.name || `캐릭터 ${i + 1}`} />
         {ch.subName && <span className="pair-subname">{ch.subName}</span>}
         {ch.keywords?.length > 0 && (
           <span className="pair-keywords">
@@ -178,9 +180,14 @@ function PairOverview({ config, base, empty, admin }) {
             onMouseLeave={() => setHover(null)}
             aria-label={`${ch.name || ch.subName || `캐릭터 ${i + 1}`} 자세히 보기`}
           >
-            {ch.image ? <img src={ch.image} alt="" /> : <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>}
+            <span className="pair-panel-frame" aria-hidden="true" />
+            {ch.image ? (
+              <img src={ch.image} alt="" style={{ '--zoom': Number(ch.zoom) || 1.6, '--focus-y': `${Number(ch.focusY ?? 6)}%` }} />
+            ) : (
+              <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>
+            )}
             <span className="pair-panel-more">
-              자세히 보기 <i className="fa-solid fa-arrow-right" />
+              <span className="pair-more-text">자세히 보기</span> <i className="fa-solid fa-arrow-right" />
             </span>
           </button>
         ))}
@@ -230,7 +237,7 @@ function PairDetail({ config, idx, base }) {
         <div className="pair-info">
           <header className="pair-info-head">
             {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
-            <h1 className="pair-name">{ch.name || `캐릭터 ${idx + 1}`}</h1>
+            <FitName as="h1" className="pair-name" text={ch.name || `캐릭터 ${idx + 1}`} />
             {ch.subName && <span className="pair-subname">{ch.subName}</span>}
           </header>
 
@@ -368,7 +375,9 @@ const CHAR_BASIC = [
   { key: 'subName', label: '이름 아래 작은 글', placeholder: '이도하' },
   { key: 'tagline', label: '이름 위 한 줄', placeholder: '밤에만 문을 여는 고서점 주인.' },
   { key: 'image', label: '전신 이미지', type: 'image', guide: 'fullBody', uploadOptions: { maxSize: 2000, keepPng: true } },
-  { key: 'color', label: '대표 색 (키워드·스테이터스 막대)', type: 'color' },
+  { key: 'zoom', label: '첫 화면 이미지 확대 (1이면 전신, 클수록 반신을 크게)', type: 'range', min: 1, max: 3, step: 0.05 },
+  { key: 'focusY', label: '확대 기준 높이 (얼굴이 잘리면 줄이고, 너무 위가 비면 늘려요)', type: 'range', min: 0, max: 60, unit: '%' },
+  { key: 'color', label: '대표 색 (키워드·테두리·스테이터스 막대)', type: 'color' },
   { key: 'bg', label: '이미지 뒤 배경색 (비우면 대표 색을 옅게)', type: 'color' },
   { key: 'intro', label: '간단 소개 (첫 화면·상세 화면)', type: 'textarea', rows: 2 },
 ]
@@ -518,5 +527,39 @@ function KeywordsInput({ value, onChange }) {
         aria-label="키워드 입력"
       />
     </div>
+  )
+}
+
+// 이름이 칸보다 길면 줄바꿈하지 않고 글자 크기를 줄여서 한 줄에 맞춰요.
+function FitName({ text, as: Tag = 'strong', className = '' }) {
+  const boxRef = useRef(null)
+  const textRef = useRef(null)
+  useLayoutEffect(() => {
+    const box = boxRef.current
+    const inner = textRef.current
+    if (!box || !inner) return
+    const fit = () => {
+      box.style.fontSize = ''
+      const max = parseFloat(getComputedStyle(box).fontSize) || 48
+      const avail = box.clientWidth
+      const need = inner.getBoundingClientRect().width
+      if (avail > 0 && need > avail) box.style.fontSize = `${Math.max(14, Math.floor(max * (avail / need) * 0.98))}px`
+    }
+    fit()
+    let w = box.clientWidth
+    const ro = new ResizeObserver(() => {
+      if (box.clientWidth !== w) {
+        w = box.clientWidth
+        fit()
+      }
+    })
+    ro.observe(box)
+    document.fonts?.ready?.then(fit)
+    return () => ro.disconnect()
+  }, [text])
+  return (
+    <Tag ref={boxRef} className={`${className} fit-name`}>
+      <span ref={textRef}>{text}</span>
+    </Tag>
   )
 }

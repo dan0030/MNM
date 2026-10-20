@@ -36,6 +36,12 @@ html.page-wide .topbar-inner {
   overflow-wrap: anywhere;
   transition: color 0.3s;
 }
+.pair-name.fit-name {
+  white-space: nowrap;
+}
+.pair-name.fit-name > span {
+  display: inline-block;
+}
 .pair-subname {
   display: block;
   font-size: 0.95rem;
@@ -116,6 +122,7 @@ html.page-wide .topbar-inner {
 }
 .pair-panel {
   position: relative;
+  isolation: isolate;
   display: block;
   aspect-ratio: 5 / 8;
   max-height: calc(100vh - 140px);
@@ -132,18 +139,46 @@ html.page-wide .topbar-inner {
 .pair-panel img {
   position: absolute;
   inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  object-position: center bottom;
+  object-position: center top;
+  /* 전신 이미지를 확대해서 윗부분(반신)을 크게 보여줘요 */
+  transform-origin: 50% var(--focus-y, 6%);
+  transform: scale(var(--zoom, 1.6));
   transition: transform 0.6s var(--ease);
+}
+/* 마우스를 올리면 그림 뒤로 생기는 테두리 */
+.pair-panel-frame {
+  position: absolute;
+  inset: 18px;
+  z-index: 0;
+  border: 2px solid var(--pc);
+  border-radius: 22px;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.4s, transform 0.5s var(--ease);
+  pointer-events: none;
+}
+.pair-panel-frame::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--pc) 45%, transparent);
+  border-radius: 16px;
+}
+.pair-panel.is-hover .pair-panel-frame,
+.pair-panel:focus-visible .pair-panel-frame {
+  opacity: 1;
+  transform: none;
 }
 .pair-panel.is-hover {
   transform: translateY(-6px);
   box-shadow: 0 32px 70px rgba(0, 0, 0, 0.2);
 }
 .pair-panel.is-hover img {
-  transform: scale(1.03);
+  transform: scale(calc(var(--zoom, 1.6) * 1.04));
 }
 .pair-overview.hover-0 .panel-1,
 .pair-overview.hover-1 .panel-0 {
@@ -158,6 +193,7 @@ html.page-wide .topbar-inner {
   transition: opacity 0.4s;
 }
 .pair-panel-empty {
+  z-index: 1;
   position: absolute;
   inset: 0;
   display: grid;
@@ -166,10 +202,11 @@ html.page-wide .topbar-inner {
   color: color-mix(in srgb, var(--pc) 45%, transparent);
 }
 .pair-panel-more {
+  z-index: 2;
   position: absolute;
-  left: 50%;
-  top: 18px;
-  transform: translate(-50%, -6px);
+  right: 14px;
+  top: 14px;
+  transform: translateY(-6px);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -187,12 +224,13 @@ html.page-wide .topbar-inner {
 .pair-panel.is-hover .pair-panel-more,
 .pair-panel:focus-visible .pair-panel-more {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: none;
 }
 
 /* 가운데 아래 페어 제목 */
 .pair-heading {
   position: absolute;
+  z-index: 3;
   left: 50%;
   bottom: 22px;
   transform: translateX(-50%);
@@ -236,7 +274,7 @@ html.page-wide .topbar-inner {
 @media (hover: none) {
   .pair-panel-more {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: none;
   }
 }
 
@@ -264,9 +302,16 @@ html.page-wide .topbar-inner {
     padding: 10px 18px 12px;
     border-radius: 20px;
   }
+  .pair-more-text {
+    display: none;
+  }
   .pair-panel-more {
-    top: 12px;
-    padding: 6px 11px;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    padding: 0;
     font-size: 0.72rem;
   }
 }
