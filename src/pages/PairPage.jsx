@@ -257,18 +257,6 @@ function PairDetail({ config, idx, base }) {
 
           {ch.intro && <p className="pair-intro">{swapNames(ch.intro, site)}</p>}
 
-          {ch.wiki && (
-            <button type="button" className="pair-wiki-btn" onClick={() => setWikiOpen(true)}>
-              <span className="pair-wiki-icon">
-                <i className="fa-solid fa-book-open" />
-              </span>
-              <span className="pair-wiki-text">
-                <strong>{ch.wikiTitle || '위키 문서'}</strong>
-                <small>눌러서 펼쳐보기</small>
-              </span>
-              <i className="fa-solid fa-chevron-right" />
-            </button>
-          )}
 
           {ch.profile?.some((p) => p.label || p.value) && (
             <div className="pair-card">
@@ -316,6 +304,19 @@ function PairDetail({ config, idx, base }) {
               <h2 className="pair-card-title">소개</h2>
               <Content html={ch.about} />
             </div>
+          )}
+
+          {ch.wiki && (
+            <button type="button" className="pair-wiki-btn" onClick={() => setWikiOpen(true)}>
+              <span className="pair-wiki-icon">
+                <i className="fa-solid fa-book-open" />
+              </span>
+              <span className="pair-wiki-text">
+                <strong>{ch.wikiTitle || '위키 문서'}</strong>
+                <small>눌러서 펼쳐보기</small>
+              </span>
+              <i className="fa-solid fa-chevron-right" />
+            </button>
           )}
         </div>
       </div>
@@ -386,7 +387,7 @@ const CHAR_FIELDS = [
     itemLabel: '항목',
     itemFields: [
       { key: 'label', label: '항목', placeholder: '나이 / 키 / 생일 / 직업' },
-      { key: 'value', label: '내용' },
+      { key: 'value', label: '내용 (Enter로 줄바꿈)', type: 'textarea', rows: 2 },
     ],
   },
   { type: 'heading', label: '스테이터스' },
