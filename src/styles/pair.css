@@ -5,6 +5,9 @@
 
 .pair-page {
   --pc: var(--accent);
+}
+/* 상세 화면은 큰 제목이 없어서 위쪽을 조금 띄워요 */
+.pair-detail {
   padding-top: 8px;
 }
 .pair-page button {
@@ -658,11 +661,4 @@
   .pair-detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* 페어 첫 화면: 큰 제목 위 빈 공간을 줄여요 */
-.pair-overview .large-title {
-  min-height: 0;
-  padding-top: 8px;
-  padding-bottom: 18px;
 }
