@@ -8,7 +8,7 @@ import { Content } from '../components/Content.jsx'
 import { Comments } from '../components/Comments.jsx'
 import { Empty, Spinner } from '../components/ui.jsx'
 import { ThreadView } from '../components/Thread.jsx'
-import { RpPostInfo, charsOf, useCategoryConfig } from './RpPage.jsx'
+import { RpPostInfo, RpTitleTags, charsOf, useCategoryConfig } from './RpPage.jsx'
 import { RpScriptView, isScript } from '../components/RpScript.jsx'
 
 export default function PostView({ id }) {
@@ -108,11 +108,12 @@ export default function PostView({ id }) {
           )}
           <h1 className="article-title">
             {post.visibility === 'private' && <i className="fa-solid fa-eye-slash lock-icon" title="비공개" />}
+            {rpCat && !post.locked && <RpTitleTags post={post} category={rpCat} config={rpConfig} />}
             {post.visibility === 'protected' && <i className="fa-solid fa-lock lock-icon" title="비밀글" />}
             {post.title}
           </h1>
           {post.subtitle && <p className="article-subtitle">{post.subtitle}</p>}
-          {category?.page_type === 'rp' && !post.locked && <RpPostInfo post={post} category={category} config={rpConfig} />}
+          {category?.page_type === 'rp' && !post.locked && <RpPostInfo post={post} />}
           <div className="article-meta">
             <span>{formatDate(post.publishedAt)}</span>
             {app.site.features.showViews && (

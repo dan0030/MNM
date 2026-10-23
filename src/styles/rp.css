@@ -278,19 +278,24 @@
   color: var(--accent);
 }
 
-/* 글 보기 위쪽 역극 정보 */
-.rp-post-info {
+/* 글 보기: 제목 앞 태그 + 제목 아래 기간·설명 */
+.rp-title-tags {
   --wc: var(--accent);
-  margin: 14px 0 6px;
-  padding: 14px 16px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--wc) 7%, var(--surface-2));
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 10px;
+  vertical-align: 0.28em;
 }
-.rp-post-info .rp-card-top {
-  justify-content: center;
+.rp-title-tags .rp-badge {
+  font-size: 0.8rem;
+  letter-spacing: 0;
+}
+.rp-post-info {
+  margin: 10px 0 4px;
 }
 .rp-post-info p {
-  margin: 10px 0 0;
+  margin: 8px auto 0;
+  max-width: 560px;
   font-size: 0.92rem;
   line-height: 1.7;
   color: var(--text-sub);

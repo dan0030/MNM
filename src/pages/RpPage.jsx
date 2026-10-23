@@ -484,27 +484,35 @@ export function RpWriteFields({ config, chars, extra, setExtra }) {
 
 /* ---------------- 글 보기 화면 위쪽의 역극 정보 ---------------- */
 
-export function RpPostInfo({ post, category, config }) {
-  const { site } = useApp()
+// 글 제목 앞에 태그처럼 붙는 세계선 · 진행 상태
+export function RpTitleTags({ post, category, config }) {
   const world = worldsOf(config).find((w) => w.key === post.rpWorld)
   const status = STATUS_LABEL[post.rpStatus]
-  if (!world && !status && !post.rpPeriod && !post.rpDesc) return null
+  if (!world && !status) return null
   return (
-    <div className="rp-post-info" style={world?.color ? { '--wc': world.color } : undefined}>
-      <div className="rp-card-top">
-        {world && (
-          <a className="rp-badge world" href={`/category/${encodeURIComponent(category.slug)}?w=${encodeURIComponent(world.key)}`}>
-            <span className="rp-world-dot" />
-            {world.name}
-          </a>
-        )}
-        {status && <span className={`rp-badge status s-${post.rpStatus}`}>{status}</span>}
-        {post.rpPeriod && (
-          <span className="rp-card-meta">
-            <i className="fa-regular fa-calendar" /> {post.rpPeriod}
-          </span>
-        )}
-      </div>
+    <span className="rp-title-tags" style={world?.color ? { '--wc': world.color } : undefined}>
+      {world && (
+        <a className="rp-badge world" href={`/category/${encodeURIComponent(category.slug)}?w=${encodeURIComponent(world.key)}`}>
+          <span className="rp-world-dot" />
+          {world.name}
+        </a>
+      )}
+      {status && <span className={`rp-badge status s-${post.rpStatus}`}>{status}</span>}
+    </span>
+  )
+}
+
+// 제목 아래: 기간 · 카드 설명 (상자 없이 글자만)
+export function RpPostInfo({ post }) {
+  const { site } = useApp()
+  if (!post.rpPeriod && !post.rpDesc) return null
+  return (
+    <div className="rp-post-info">
+      {post.rpPeriod && (
+        <span className="rp-card-meta">
+          <i className="fa-regular fa-calendar" /> {post.rpPeriod}
+        </span>
+      )}
       {post.rpDesc && <p>{swapNames(post.rpDesc, site)}</p>}
     </div>
   )
