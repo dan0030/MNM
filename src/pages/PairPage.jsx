@@ -4,6 +4,7 @@ import { swapNames, useApp } from '../lib/store.jsx'
 import { api } from '../lib/api.js'
 import { navigate } from '../lib/router.js'
 import { Content } from '../components/Content.jsx'
+import { LargeTitle } from '../components/Shell.jsx'
 import { Fields } from '../components/Fields.jsx'
 import { RichEditor } from '../editor/RichEditor.jsx'
 import { Sheet, Spinner } from '../components/ui.jsx'
@@ -80,18 +81,6 @@ export default function PairPage({ category, search }) {
 
   const config = useMemo(() => (raw ? normalize(raw, app.site) : null), [raw, app.site])
 
-  // 이 페이지는 넓게 써요. (본문 창 너비 설정보다 넓게)
-  useEffect(() => {
-    document.documentElement.classList.add('page-wide')
-    return () => document.documentElement.classList.remove('page-wide')
-  }, [])
-
-  // 첫 화면은 PC에서 스크롤 없이 한 화면에 (상세 화면·휴대폰은 스크롤)
-  useEffect(() => {
-    const root = document.documentElement
-    root.classList.toggle('pair-fixed', idx === null)
-    return () => root.classList.remove('pair-fixed')
-  }, [idx])
   const base = `/category/${encodeURIComponent(category.slug)}`
 
   useEffect(() => {
@@ -139,95 +128,56 @@ export default function PairPage({ category, search }) {
 
 function PairOverview({ config, base, empty, admin }) {
   const { site } = useApp()
-  const [hover, setHover] = useState(null)
   const nameGroup = useFitGroup()
   const [worldOpen, setWorldOpen] = useState(false)
   const go = (i) => navigate(`${base}?c=${i}`)
 
-  const side = (i) => {
-    const ch = config.chars[i]
-    return (
-      <button
-        type="button"
-        className={`pair-side side-${i} ${hover === i ? 'is-hover' : ''}`}
-        style={charStyle(ch)}
-        onClick={() => go(i)}
-        onMouseEnter={() => setHover(i)}
-        onMouseLeave={() => setHover(null)}
-        onFocus={() => setHover(i)}
-        onBlur={() => setHover(null)}
-      >
-        {ch.tagline && <span className="pair-tagline">{swapNames(ch.tagline, site)}</span>}
-        <FitName className="pair-name" text={ch.name || `캐릭터 ${i + 1}`} group={nameGroup} />
-        {ch.subName && <span className="pair-subname">{ch.subName}</span>}
-        {ch.keywords?.length > 0 && (
-          <span className="pair-keywords">
-            {ch.keywords.map((k, j) => (
-              <span key={j} className="pair-chip">
-                {k}
-              </span>
-            ))}
-          </span>
-        )}
-        {ch.intro && <span className="pair-intro">{swapNames(ch.intro, site)}</span>}
-      </button>
-    )
-  }
-
   return (
-    <section className={`pair-overview ${hover !== null ? `hover-${hover}` : ''} ${config.worldWiki ? 'has-world' : ''}`}>
-      <div className="pair-col left">{side(0)}</div>
-      <div className="pair-stage">
+    <section className="pair-overview">
+      <LargeTitle title={config.title ? swapNames(config.title, site) : '페어'} subtitle={config.subtitle ? swapNames(config.subtitle, site) : ''} />
+
+      <div className="pair-cards">
         {config.chars.map((ch, i) => (
-          <button
-            type="button"
-            key={i}
-            className={`pair-panel panel-${i} ${hover === i ? 'is-hover' : ''}`}
-            style={charStyle(ch)}
-            onClick={() => go(i)}
-            onMouseEnter={() => setHover(i)}
-            onMouseLeave={() => setHover(null)}
-            aria-label={`${ch.name || ch.subName || `캐릭터 ${i + 1}`} 자세히 보기`}
-          >
-            <span className="pair-panel-frame" aria-hidden="true" />
-            {ch.image ? (
-              <img src={ch.image} alt="" style={{ '--zoom': Number(ch.zoom) || 1.6, '--focus-y': `${Number(ch.focusY ?? 6)}%` }} />
-            ) : (
-              <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>
-            )}
-            {/* 왼쪽 캐릭터는 바깥(왼쪽)을 가리키는 화살표를 글자 왼쪽에 */}
-            <span className="pair-panel-more">
-              {i === 0 && <i className="fa-solid fa-arrow-left" />}
-              <span className="pair-more-text">자세히 보기</span>
-              {i !== 0 && <i className="fa-solid fa-arrow-right" />}
+          <button type="button" key={i} className="pair-pick" style={charStyle(ch)} onClick={() => go(i)} aria-label={`${ch.name || ch.subName || `캐릭터 ${i + 1}`} 자세히 보기`}>
+            <span className="pair-pick-img">
+              <span className="pair-panel-frame" aria-hidden="true" />
+              {ch.image ? (
+                <img src={ch.image} alt="" style={{ '--zoom': Number(ch.zoom) || 1.6, '--focus-y': `${Number(ch.focusY ?? 6)}%` }} />
+              ) : (
+                <span className="pair-panel-empty">
+                  <i className="fa-solid fa-user" />
+                </span>
+              )}
+            </span>
+            <span className="pair-pick-info">
+              <FitName className="pair-pick-name" text={ch.name || `캐릭터 ${i + 1}`} group={nameGroup} />
+              {ch.keywords?.length > 0 && (
+                <span className="pair-keywords">
+                  {ch.keywords.map((k, j) => (
+                    <span key={j} className="pair-chip">
+                      {k}
+                    </span>
+                  ))}
+                </span>
+              )}
             </span>
           </button>
         ))}
-        {(config.eyebrow || config.title || config.subtitle || config.worldWiki) && (
-          <div className="pair-under">
-            {(config.eyebrow || config.title || config.subtitle) && (
-              <div className="pair-heading">
-                {config.eyebrow && <span className="pair-eyebrow">{config.eyebrow}</span>}
-                {config.title && <h1 className="pair-title">{swapNames(config.title, site)}</h1>}
-                {config.subtitle && <p className="pair-subtitle">{swapNames(config.subtitle, site)}</p>}
-              </div>
-            )}
-            {config.worldWiki && (
-              <button type="button" className="pair-wiki-btn pair-world-btn" onClick={() => setWorldOpen(true)}>
-                <span className="pair-wiki-icon">
-                  <i className="fa-solid fa-earth-asia" />
-                </span>
-                <span className="pair-wiki-text">
-                  <strong>{config.worldWikiTitle || '세계관 위키'}</strong>
-                  <small>눌러서 펼쳐보기</small>
-                </span>
-                <i className="fa-solid fa-chevron-right" />
-              </button>
-            )}
-          </div>
-        )}
       </div>
-      <div className="pair-col right">{side(1)}</div>
+
+      {config.worldWiki && (
+        <button type="button" className="pair-wiki-btn pair-world-btn" onClick={() => setWorldOpen(true)}>
+          <span className="pair-wiki-icon">
+            <i className="fa-solid fa-earth-asia" />
+          </span>
+          <span className="pair-wiki-text">
+            <strong>{config.worldWikiTitle || '세계관 위키'}</strong>
+            <small>눌러서 펼쳐보기</small>
+          </span>
+          <i className="fa-solid fa-chevron-right" />
+        </button>
+      )}
+
       {worldOpen && <WikiModal title={config.worldWikiTitle || '세계관 위키'} html={config.worldWiki} onClose={() => setWorldOpen(false)} />}
       {empty && admin && <p className="pair-empty-hint">오른쪽 아래 '페어 편집'에서 두 사람의 이름과 전신 이미지를 넣어주세요.</p>}
     </section>
@@ -385,8 +335,7 @@ function WikiModal({ title, html, onClose }) {
 /* ---------------- 편집 ---------------- */
 
 const PAGE_FIELDS = [
-  { key: 'eyebrow', label: '작은 머리글', placeholder: 'PAIR ARCHIVE' },
-  { key: 'title', label: '페어 이름 (가운데 큰 제목)', placeholder: '등대와 철새' },
+  { key: 'title', label: '페어 이름 (첫 화면 제목)', placeholder: '등대와 철새' },
   { key: 'subtitle', label: '한 줄 소개', placeholder: '겨울마다 한 번씩, 같은 골목에서.' },
 ]
 
@@ -400,7 +349,7 @@ const CHAR_BASIC = [
   { key: 'focusY', label: '확대 기준 높이 (얼굴이 잘리면 줄이고, 너무 위가 비면 늘려요)', type: 'range', min: 0, max: 60, unit: '%' },
   { key: 'color', label: '대표 색 (키워드·테두리·스테이터스 막대)', type: 'color' },
   { key: 'bg', label: '이미지 뒤 배경색 (비우면 대표 색을 옅게)', type: 'color' },
-  { key: 'intro', label: '간단 소개 (첫 화면·상세 화면)', type: 'textarea', rows: 2 },
+  { key: 'intro', label: '간단 소개 (상세 화면)', type: 'textarea', rows: 2 },
 ]
 
 const CHAR_FIELDS = [
@@ -481,7 +430,7 @@ function PairEditor({ initial, startTab, onClose, onSave }) {
 
       {ci === null ? (
         <>
-          <p className="sheet-help">첫 화면 가운데 아래에 들어가는 제목이에요. 두 사람의 내용은 위 탭에서 각각 적어요. ({'{{나}}'} {'{{상대}}'} 이름 변환을 쓸 수 있어요)</p>
+          <p className="sheet-help">첫 화면 맨 위 제목과 소개예요. 두 사람의 내용은 위 탭에서 각각 적어요. ({'{{나}}'} {'{{상대}}'} 이름 변환을 쓸 수 있어요)</p>
           <Fields fields={PAGE_FIELDS} value={draft} onChange={(v) => setDraft((d) => ({ ...d, ...v, chars: d.chars }))} />
           <div className="fields">
             <h3 className="fields-heading">세계관 위키</h3>

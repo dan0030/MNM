@@ -2,12 +2,6 @@
    캐릭터 페어 페이지
    ================================================================== */
 
-/* 이 페이지는 본문 창을 넓게 써요 */
-html.page-wide .page,
-html.page-wide .page.framed,
-html.page-wide .topbar-inner {
-  max-width: min(1440px, 100%);
-}
 
 .pair-page {
   --pc: var(--accent);
@@ -89,71 +83,42 @@ html.page-wide .topbar-inner {
   text-align-last: right;
 }
 
-/* ---------------- 첫 화면 ---------------- */
+/* ---------------- 첫 화면: 두 사람 카드 ---------------- */
 
-.pair-overview {
-  position: relative;
+.pair-cards {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) minmax(0, 1fr);
-  grid-template-areas: 'left stage right';
-  gap: clamp(16px, 3vw, 44px);
-  align-items: start;
-  padding: clamp(8px, 3vw, 36px) 0 0;
-}
-.pair-col.left {
-  grid-area: left;
-}
-.pair-col.right {
-  grid-area: right;
-}
-.pair-stage {
-  grid-area: stage;
-}
-
-.pair-side {
-  display: block;
-  width: 100%;
-  padding: 8px 0;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-}
-.pair-col.right .pair-side {
-  text-align: right;
-}
-.pair-col.right .pair-keywords {
-  justify-content: flex-end;
-}
-.pair-side.is-hover .pair-name {
-  color: color-mix(in srgb, var(--pc) 80%, var(--text));
-}
-
-.pair-stage {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
-.pair-panel {
+.pair-pick {
+  --pc: var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 10px 10px 18px;
+  border: var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s;
+}
+.pair-pick:hover {
+  transform: translateY(-3px);
+}
+.pair-pick-img {
   position: relative;
   isolation: isolate;
   display: block;
-  aspect-ratio: 5 / 8;
-  --pmaxh: calc(100vh - 140px);
-  max-height: var(--pmaxh);
-  /* 높이 한도에 맞춰 너비도 줄여서 세로로 긴 카드 비율을 지켜요 */
-  width: min(100%, calc(var(--pmaxh) * 5 / 8));
-  padding: 0;
-  border: none;
-  border-radius: 32px;
+  aspect-ratio: 4 / 5;
+  border-radius: calc(var(--radius) - 6px);
   overflow: hidden;
-  cursor: pointer;
-  background: var(--pc-bg, linear-gradient(180deg, color-mix(in srgb, var(--pc) 8%, var(--surface)), color-mix(in srgb, var(--pc) 26%, var(--surface))));
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
-  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease), filter 0.45s var(--ease), opacity 0.45s;
+  background: var(--pc-bg, linear-gradient(180deg, color-mix(in srgb, var(--pc) 8%, var(--surface)), color-mix(in srgb, var(--pc) 24%, var(--surface))));
 }
-.pair-panel img {
+/* 전신 이미지를 확대해 반신이 보이게 */
+.pair-pick-img img {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -161,209 +126,91 @@ html.page-wide .topbar-inner {
   height: 100%;
   object-fit: contain;
   object-position: center top;
-  /* 전신 이미지를 확대해서 윗부분(반신)을 크게 보여줘요 */
   transform-origin: 50% var(--focus-y, 6%);
   transform: scale(var(--zoom, 1.6));
   transition: transform 0.6s var(--ease);
 }
+.pair-pick:hover .pair-pick-img img {
+  transform: scale(calc(var(--zoom, 1.6) * 1.04));
+}
 /* 마우스를 올리면 그림 뒤로 생기는 테두리 */
 .pair-panel-frame {
   position: absolute;
-  inset: 18px;
+  inset: 14px;
   z-index: 0;
-  border: 2px solid var(--pc);
-  border-radius: 22px;
+  border: 2px solid color-mix(in srgb, var(--pc) 85%, var(--text));
+  border-radius: 18px;
   opacity: 0;
-  transform: scale(0.92);
+  transform: scale(0.94);
   transition: opacity 0.4s, transform 0.5s var(--ease);
   pointer-events: none;
 }
 .pair-panel-frame::after {
   content: '';
   position: absolute;
-  inset: 8px;
+  inset: 7px;
   border: 1px solid color-mix(in srgb, var(--pc) 45%, transparent);
-  border-radius: 16px;
+  border-radius: 13px;
 }
-.pair-panel.is-hover .pair-panel-frame,
-.pair-panel:focus-visible .pair-panel-frame {
+.pair-pick:hover .pair-panel-frame,
+.pair-pick:focus-visible .pair-panel-frame {
   opacity: 1;
   transform: none;
-}
-.pair-panel.is-hover {
-  transform: translateY(-6px);
-  box-shadow: 0 32px 70px rgba(0, 0, 0, 0.2);
-}
-.pair-panel.is-hover img {
-  transform: scale(calc(var(--zoom, 1.6) * 1.04));
-}
-.pair-overview.hover-0 .panel-1,
-.pair-overview.hover-1 .panel-0 {
-  filter: saturate(0.85);
-  opacity: 0.92;
-}
-.pair-overview.hover-0 .side-1,
-.pair-overview.hover-1 .side-0 {
-  opacity: 0.72;
-}
-.pair-side {
-  transition: opacity 0.4s;
 }
 .pair-panel-empty {
-  z-index: 1;
   position: absolute;
   inset: 0;
+  z-index: 1;
   display: grid;
   place-items: center;
-  font-size: 4rem;
+  font-size: 3.4rem;
   color: color-mix(in srgb, var(--pc) 45%, transparent);
 }
-.pair-panel-more {
-  z-index: 2;
-  position: absolute;
-  right: 14px;
-  top: 14px;
-  transform: translateY(-6px);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-size: 0.8rem;
-  font-weight: 750;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s, transform 0.3s var(--ease);
-}
-.panel-0 .pair-panel-more {
-  right: auto;
-  left: 14px;
-}
-.pair-panel.is-hover .pair-panel-more,
-.pair-panel:focus-visible .pair-panel-more {
-  opacity: 1;
-  transform: none;
-}
-
-/* 가운데 아래 페어 제목 */
-/* 이미지 카드 아래: 페어 이름 카드(카드 아래 가장자리에 걸침) + 세계관 위키 버튼 */
-.pair-under {
-  grid-column: 1 / -1;
-  position: relative;
-  z-index: 3;
+.pair-pick-info {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin-top: -26px;
+  padding: 0 6px;
+  min-width: 0;
 }
-.pair-heading {
-  width: max-content;
-  max-width: calc(100% - 32px);
-  padding: 14px 26px 16px;
-  border-radius: 26px;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(18px) saturate(1.2);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  text-align: center;
-}
-/* 세계관 버튼까지 한 화면에 들어오도록 이미지 카드를 조금 낮게 */
-@media (min-width: 901px) {
-  .pair-overview.has-world .pair-panel {
-    --pmaxh: max(400px, calc(100vh - 330px));
-  }
-  /* 카드가 낮아져 폭이 줄어도 두 장이 가운데에 붙어 있게 */
-  .pair-overview .panel-0 {
-    justify-self: end;
-  }
-  .pair-overview .panel-1 {
-    justify-self: start;
-  }
-}
-.pair-wiki-btn.pair-world-btn {
-  width: min(340px, calc(100% - 32px));
-}
-.pair-eyebrow {
+.pair-pick-name {
   display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.32em;
-  color: var(--text-sub);
-}
-.pair-title {
-  margin: 4px 0 2px;
-  font-size: clamp(1.4rem, 2.6vw, 2.3rem);
+  width: 100%;
+  font-family: var(--heading-font), var(--font), sans-serif;
+  font-size: clamp(1.4rem, 3.4vw, 2rem);
   font-weight: 900;
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: 1.1;
+  white-space: nowrap;
 }
-.pair-subtitle {
-  margin: 0;
-  font-size: 0.86rem;
-  color: var(--text-sub);
+.pair-pick-name > span {
+  display: inline-block;
+}
+.pair-pick .pair-keywords {
+  justify-content: center;
+  margin-top: 0;
+}
+.pair-wiki-btn.pair-world-btn {
+  margin-top: 14px;
 }
 .pair-empty-hint {
-  grid-column: 1 / -1;
+  margin-top: 14px;
   text-align: center;
   color: var(--text-sub);
   font-size: 0.88rem;
 }
-
-@media (hover: none) {
-  .pair-panel-more {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* 좁은 화면: 이미지 두 장을 위에, 이름은 그 아래 양쪽에 */
-@media (max-width: 900px) {
-  .pair-overview {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas:
-      'stage stage'
-      'left right';
-    gap: 18px 14px;
-  }
-  .pair-stage {
+@media (max-width: 640px) {
+  .pair-cards {
     gap: 10px;
   }
-  .pair-panel {
-    border-radius: 24px;
-    --pmaxh: 64vh;
+  .pair-pick {
+    padding: 8px 8px 14px;
+    gap: 10px;
   }
-  .pair-name {
-    font-size: clamp(1.9rem, 8vw, 3rem);
-  }
-  .pair-intro {
-    font-size: 0.84rem;
-    line-height: 1.75;
-  }
-  .pair-under {
-    margin-top: -20px;
-  }
-  .pair-heading {
-    padding: 10px 18px 12px;
-    border-radius: 20px;
-  }
-  .pair-more-text {
-    display: none;
-  }
-  .panel-0 .pair-panel-more {
-    left: 10px;
-  }
-  .pair-panel-more {
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    justify-content: center;
-    padding: 0;
+  .pair-pick .pair-chip {
     font-size: 0.72rem;
+    padding: 5px 9px;
   }
 }
 
@@ -789,52 +636,4 @@ html.page-wide .topbar-inner {
   border: none;
   background: transparent;
   padding: 6px;
-}
-
-/* 이 페이지는 아래 여백을 좁게 */
-html.page-wide .app .page {
-  padding-bottom: calc(var(--bottom-nav-space, 0px) + 28px);
-}
-
-/* 첫 화면: PC에서는 스크롤 없이 한 화면에 */
-@media (min-width: 901px) {
-  html.pair-fixed,
-  html.pair-fixed body {
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-  html.pair-fixed.inner-scroll #root {
-    overflow-y: hidden;
-  }
-  html.pair-fixed .site-footer,
-  html.pair-fixed .scroll-top-btn {
-    display: none;
-  }
-  html.pair-fixed .app .page {
-    padding-bottom: 0;
-  }
-  /* 이미지 카드 + 아래 페어 이름 카드가 창 안에 들어오는 높이 */
-  /* 본문 창을 위로 바짝 붙이고(창 상단 여백 설정보다 좁게), 하단 탭 높이까지 빼서 겹치지 않게 */
-  html.pair-fixed .browser-frame {
-    margin-top: min(var(--frame-top, 14px), 12px);
-  }
-  html.pair-fixed .pair-overview {
-    padding-top: 18px;
-  }
-  html.pair-fixed .pair-panel {
-    --pmaxh: max(300px, calc(100vh - 250px - var(--bottom-nav-space, 0px)));
-  }
-  html.pair-fixed .pair-overview.has-world .pair-panel {
-    --pmaxh: max(260px, calc(100vh - 330px - var(--bottom-nav-space, 0px)));
-  }
-  /* 소개글이 길면 양옆 글 칸 안에서만 넘겨 봐요 */
-  html.pair-fixed .pair-col {
-    max-height: calc(100vh - 150px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-  }
-  html.pair-fixed .pair-col::-webkit-scrollbar {
-    display: none;
-  }
 }
