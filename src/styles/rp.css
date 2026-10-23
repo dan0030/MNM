@@ -110,22 +110,9 @@
   background: color-mix(in srgb, var(--wc) 85%, var(--text));
 }
 .rp-world-desc {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  margin-bottom: 16px;
-  padding: 14px 18px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--wc) 9%, var(--surface));
-  border-left: 4px solid color-mix(in srgb, var(--wc) 80%, var(--text));
-}
-.rp-world-desc strong {
-  flex: none;
-  color: color-mix(in srgb, var(--wc) 65%, var(--text));
-}
-.rp-world-desc p {
-  margin: 0;
+  margin: 0 4px 16px;
   font-size: 0.9rem;
+  line-height: 1.7;
   color: var(--text-sub);
   white-space: pre-line;
 }

@@ -177,10 +177,7 @@ export default function RpPage({ category, search }) {
       </div>
 
       {current?.desc && (
-        <div className="rp-world-desc" style={current.color ? { '--wc': current.color } : undefined}>
-          <strong>{current.name}</strong>
-          <p>{swapNames(current.desc, app.site)}</p>
-        </div>
+        <p className="rp-world-desc">{swapNames(current.desc, app.site)}</p>
       )}
 
       {(tag || q) && (
