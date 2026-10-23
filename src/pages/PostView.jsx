@@ -8,7 +8,8 @@ import { Content } from '../components/Content.jsx'
 import { Comments } from '../components/Comments.jsx'
 import { Empty, Spinner } from '../components/ui.jsx'
 import { ThreadView } from '../components/Thread.jsx'
-import { RpPostInfo } from './RpPage.jsx'
+import { RpPostInfo, charsOf, useCategoryConfig } from './RpPage.jsx'
+import { RpScriptView, isScript } from '../components/RpScript.jsx'
 
 export default function PostView({ id }) {
   const app = useApp()
@@ -40,6 +41,10 @@ export default function PostView({ id }) {
   useEffect(() => {
     if (post) document.title = `${post.title} :: ${app.site.title}`
   }, [post, app.site.title])
+
+  // 역극 로그 글이면 캐릭터 정보(두상·말풍선 색)를 페이지 설정에서 불러와요
+  const rpCat = post ? app.categories.find((c) => c.id === post.categoryId && c.page_type === 'rp') : null
+  const [rpConfig] = useCategoryConfig(rpCat?.id || null)
 
   if (error) return <Empty title="글을 찾을 수 없어요">{error}</Empty>
   if (!post) return <Spinner />
@@ -107,7 +112,7 @@ export default function PostView({ id }) {
             {post.title}
           </h1>
           {post.subtitle && <p className="article-subtitle">{post.subtitle}</p>}
-          {category?.page_type === 'rp' && !post.locked && <RpPostInfo post={post} category={category} />}
+          {category?.page_type === 'rp' && !post.locked && <RpPostInfo post={post} category={category} config={rpConfig} />}
           <div className="article-meta">
             <span>{formatDate(post.publishedAt)}</span>
             {app.site.features.showViews && (
@@ -132,7 +137,7 @@ export default function PostView({ id }) {
           <Unlock post={post} onUnlocked={setPost} />
         ) : (
           <>
-            <Content html={post.content} />
+            {rpCat && isScript(post.content) ? <RpScriptView html={post.content} chars={charsOf(rpConfig, app.site)} /> : <Content html={post.content} />}
             {post.tags?.length > 0 && (
               <div className="article-tags">
                 {post.tags.map((t) => (

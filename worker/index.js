@@ -527,6 +527,7 @@ function shapeListItem(row, admin) {
     rpDesc: locked ? '' : extra.rpDesc || '',
     rpPeriod: extra.rpPeriod || '',
     rpStatus: extra.rpStatus || '',
+    rpQuote: !locked && extra.rpQuote?.text ? { char: String(extra.rpQuote.char || ''), text: String(extra.rpQuote.text).slice(0, 300) } : null,
     commentCount: row.comment_count || 0,
     replyCount: row.reply_count || 0,
     author: extra.author || 'me',

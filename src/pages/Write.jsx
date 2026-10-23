@@ -8,7 +8,8 @@ import { ImageInput } from '../components/Fields.jsx'
 import { Content } from '../components/Content.jsx'
 import { Empty, Segmented, Spinner, Switch } from '../components/ui.jsx'
 import { RichEditor } from '../editor/RichEditor.jsx'
-import { RpWriteFields } from './RpPage.jsx'
+import { RpWriteFields, charsOf, useCategoryConfig } from './RpPage.jsx'
+import { RpScriptEditor, RpScriptView, isScript } from '../components/RpScript.jsx'
 
 function nowLocal() {
   const d = new Date()
@@ -118,6 +119,12 @@ export default function Write({ id }) {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [])
 
+  // 역극 로그 카테고리면 일반 에디터 대신 대사·지문 대본 편집기를 써요
+  const rpCategory = post && post.type === 'post' ? app.categories.find((c) => c.id === Number(post.categoryId) && c.page_type === 'rp') : null
+  const [rpConfig] = useCategoryConfig(rpCategory?.id || null)
+  const rpChars = charsOf(rpConfig, app.site)
+  const useScript = !!rpCategory && (!post?.content?.replace(/<[^>]+>|\s|&nbsp;/g, '') || isScript(post?.content))
+
   if (!app.admin) return <Empty icon="fa-solid fa-lock" title="로그인이 필요해요"><a href="/login" className="btn primary">로그인</a></Empty>
   if (error) return <Empty title="글을 불러오지 못했어요">{error}</Empty>
   if (!post) return <Spinner />
@@ -126,7 +133,10 @@ export default function Write({ id }) {
     dirty.current = true
     setPost((p) => ({ ...p, ...patch }))
   }
-  const setExtra = (patch) => set({ extra: { ...post.extra, ...patch } })
+  const setExtra = (patch) => {
+    dirty.current = true
+    setPost((p) => ({ ...p, extra: { ...p.extra, ...patch } }))
+  }
 
   function addTags(text) {
     const next = text
@@ -188,10 +198,27 @@ export default function Write({ id }) {
             <h1 className="article-title">{post.title || '(제목 없음)'}</h1>
             {post.extra.subtitle && <p className="article-subtitle">{post.extra.subtitle}</p>}
           </header>
-          <Content html={post.content} />
+          {isScript(post.content) ? <RpScriptView html={post.content} chars={rpChars} /> : <Content html={post.content} />}
         </article>
+      ) : useScript ? (
+        rpConfig ? (
+          <RpScriptEditor
+            key={post.id || 'new'}
+            value={post.content}
+            onChange={(html) => set({ content: html, format: 'rich' })}
+            chars={rpChars}
+            cast={post.extra.rpCast}
+            quote={post.extra.rpQuote}
+            onQuote={(q) => setExtra({ rpQuote: q })}
+          />
+        ) : (
+          <Spinner />
+        )
       ) : (
-        <RichEditor value={post.content} onChange={(html) => set({ content: html })} mode={post.format} onModeChange={(m) => set({ format: m })} />
+        <>
+          {rpCategory && <p className="field-help">예전 방식(일반 글)으로 쓴 역극이에요. 본문을 비우면 대사·지문 대본 편집기로 바뀌어요.</p>}
+          <RichEditor value={post.content} onChange={(html) => set({ content: html })} mode={post.format} onModeChange={(m) => set({ format: m })} />
+        </>
       )}
 
       <section className="write-options card">
@@ -214,7 +241,7 @@ export default function Write({ id }) {
             </div>
           )}
           {post.type === 'post' && app.categories.find((c) => c.id === Number(post.categoryId))?.page_type === 'rp' && (
-            <RpWriteFields key={post.categoryId} categoryId={Number(post.categoryId)} extra={post.extra} setExtra={setExtra} />
+            <RpWriteFields key={post.categoryId} config={rpConfig} chars={rpChars} extra={post.extra} setExtra={setExtra} />
           )}
 
           <div className="field">
