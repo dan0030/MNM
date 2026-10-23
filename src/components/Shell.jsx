@@ -245,12 +245,12 @@ function Drawer({ open, onClose }) {
                         aria-label={`${c.name} 하위 카테고리 ${isOpen ? '접기' : '펼치기'}`}
                         aria-expanded={!!isOpen}
                       >
-                        <i className="fa-solid fa-chevron-down" />
+                        <i className="fa-solid fa-chevron-right" />
                       </button>
                       <div className="cat-children">
                         {kids.map((k) => (
                           <a key={k.id} href={`/category/${encodeURIComponent(k.slug)}`} className="cat-link sub">
-                            <i className={`cat-icon ${k.icon || 'fa-solid fa-angle-right'}`} />
+                            <i className={`cat-icon ${k.icon || 'fa-regular fa-folder'}`} />
                             <span>{k.name}</span>
                             {isRecent(k.latest) && <span className="new-badge">N</span>}
                             <span className="cat-count">{k.count}</span>

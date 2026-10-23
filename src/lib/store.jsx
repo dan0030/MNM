@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from './api.js'
 import { resolveHome, resolveSite, resolveTheme } from './defaults.js'
+import { orderCategories } from './categories.js'
 import { applyTheme, resolveMode, setFavicon } from './theme.js'
 
 const AppContext = createContext(null)
@@ -31,6 +32,8 @@ export function AppProvider({ children }) {
   const savedTheme = useMemo(() => resolveTheme(data?.theme), [data?.theme])
   const theme = previewTheme || savedTheme
   const home = useMemo(() => resolveHome(data?.home), [data?.home])
+  // 글쓰기·관리 등 모든 곳에서 메뉴와 같은 순서(상위 아래 하위)로 보여줘요
+  const orderedCategories = useMemo(() => orderCategories(data?.categories || []), [data?.categories])
   const mode = modeOverride || resolveMode(theme)
 
   useEffect(() => {
@@ -122,7 +125,7 @@ export function AppProvider({ children }) {
     rawTheme: data?.theme,
     setPreviewTheme,
     home,
-    categories: data?.categories || [],
+    categories: orderedCategories,
     setCategories,
     stats: data?.stats || {},
     mode,

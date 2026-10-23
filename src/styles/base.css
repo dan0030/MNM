@@ -402,7 +402,7 @@ h4 {
   top: 0;
   bottom: 0;
   left: 0;
-  width: min(320px, 86vw);
+  width: min(360px, 88vw);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -572,7 +572,7 @@ h4 {
   top: 0;
   bottom: 0;
   left: 0;
-  width: min(320px, 86vw);
+  width: min(360px, 88vw);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -759,17 +759,31 @@ form.search-field input:focus {
 .cat-toggle {
   position: absolute;
   right: 6px;
-  top: 6px;
+  top: 7px;
+  display: grid;
+  place-items: center;
   width: 30px;
   height: 30px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50%;
   background: transparent;
   color: var(--text-sub);
-  transition: transform 0.25s;
+  font-size: 0.68rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+.cat-toggle:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+}
+/* 접혀 있으면 오른쪽(›), 펼치면 아래(⌄)를 가리키도록 부드럽게 돌아가요 */
+.cat-toggle i {
+  transition: transform 0.3s var(--ease);
+}
+.cat-item.open > .cat-toggle i {
+  transform: rotate(90deg);
 }
 .cat-item.open > .cat-toggle {
-  transform: rotate(180deg);
+  color: var(--accent);
 }
 .cat-children {
   overflow: hidden;

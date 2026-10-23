@@ -8,6 +8,7 @@ import { LargeTitle } from '../components/Shell.jsx'
 import { Fields, IconInput, ColorInput } from '../components/Fields.jsx'
 import { Empty, Paging, Segmented, Spinner } from '../components/ui.jsx'
 import ImageGuidesTab from './ImageGuides.jsx'
+import { orderCategories } from '../lib/categories.js'
 import { BANNER_FIELDS, PAGE_FIELDS, DESIGN_SECTIONS, PALETTE_KEYS, SITE_FIELDS } from './schemas.js'
 
 const TABS = [
@@ -373,7 +374,7 @@ function CategoriesTab() {
       const payload = list.map((c) => ({ ...c, parentKey: c.parentKey || null, id: /^\d+$/.test(c.key) ? Number(c.key) : null }))
       const res = await api.saveCategories(payload)
       app.setCategories(res.categories)
-      setList(toDraft(res.categories))
+      setList(toDraft(orderCategories(res.categories)))
       app.showToast('카테고리를 저장했어요.')
     } catch (e) {
       app.showToast(e.message)
