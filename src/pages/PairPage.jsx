@@ -208,10 +208,7 @@ function PairDetail({ config, idx, base }) {
       </div>
 
       <div className="pair-detail-grid">
-        <div className="pair-figure">
-          <span className="pair-panel-frame" aria-hidden="true" />
-          {ch.image ? <img src={ch.image} alt={ch.name || ch.subName || ''} /> : <span className="pair-panel-empty"><i className="fa-solid fa-user" /></span>}
-        </div>
+        <PairFigure ch={ch} />
 
         <div className="pair-info">
           <header className="pair-info-head">
@@ -305,6 +302,113 @@ function PairDetail({ config, idx, base }) {
   )
 }
 
+// 상세 화면 이미지: 전신 이미지 + 추가 이미지를 옆으로 넘겨 보고, 돋보기로 크게 보기
+function PairFigure({ ch }) {
+  const images = [ch.image, ...(Array.isArray(ch.images) ? ch.images.map((x) => x?.image) : [])].filter(Boolean)
+  const [index, setIndex] = useState(0)
+  const [zoom, setZoom] = useState(false)
+  const trackRef = useRef(null)
+  const alt = ch.name || ch.subName || ''
+
+  const goTo = (i) => {
+    const el = trackRef.current
+    if (!el) return
+    const n = Math.max(0, Math.min(images.length - 1, i))
+    el.scrollTo({ left: n * el.clientWidth, behavior: 'smooth' })
+  }
+  const onScroll = () => {
+    const el = trackRef.current
+    if (el) setIndex(Math.round(el.scrollLeft / el.clientWidth))
+  }
+
+  if (!images.length) {
+    return (
+      <div className="pair-figure">
+        <span className="pair-panel-frame" aria-hidden="true" />
+        <span className="pair-panel-empty">
+          <i className="fa-solid fa-user" />
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="pair-figure">
+      <span className="pair-panel-frame" aria-hidden="true" />
+      <div className="pair-slides" ref={trackRef} onScroll={onScroll} tabIndex={images.length > 1 ? 0 : -1} aria-roledescription="이미지 넘기기"
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowRight') goTo(index + 1)
+          if (e.key === 'ArrowLeft') goTo(index - 1)
+        }}
+      >
+        {images.map((src, i) => (
+          <div className="pair-slide" key={i} aria-hidden={i !== index}>
+            <img src={src} alt={`${alt} ${i + 1}`} loading={i ? 'lazy' : undefined} draggable={false} />
+          </div>
+        ))}
+      </div>
+      <button type="button" className="pair-zoom-btn" onClick={() => setZoom(true)} aria-label="이미지 크게 보기" title="크게 보기">
+        <i className="fa-solid fa-magnifying-glass-plus" />
+      </button>
+      {images.length > 1 && (
+        <>
+          <button type="button" className="pair-slide-arrow prev" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label="이전 이미지">
+            <i className="fa-solid fa-chevron-left" />
+          </button>
+          <button type="button" className="pair-slide-arrow next" onClick={() => goTo(index + 1)} disabled={index === images.length - 1} aria-label="다음 이미지">
+            <i className="fa-solid fa-chevron-right" />
+          </button>
+          <div className="pair-slide-dots" role="tablist">
+            {images.map((_, i) => (
+              <button type="button" key={i} role="tab" aria-selected={i === index} className={i === index ? 'active' : ''} onClick={() => goTo(i)} aria-label={`${i + 1}번째 이미지`} />
+            ))}
+          </div>
+        </>
+      )}
+      {zoom && <ImageZoom images={images} start={index} alt={alt} onClose={() => setZoom(false)} />}
+    </div>
+  )
+}
+
+function ImageZoom({ images, start, alt, onClose }) {
+  const [i, setI] = useState(start)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowRight') setI((v) => Math.min(images.length - 1, v + 1))
+      if (e.key === 'ArrowLeft') setI((v) => Math.max(0, v - 1))
+    }
+    window.addEventListener('keydown', onKey)
+    document.body.classList.add('no-scroll')
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.classList.remove('no-scroll')
+    }
+  }, [images.length, onClose])
+  return createPortal(
+    <div className="pair-zoom" role="dialog" aria-modal="true" aria-label="이미지 크게 보기" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <img src={images[i]} alt={`${alt} ${i + 1}`} />
+      <button type="button" className="pair-zoom-close" onClick={onClose} aria-label="닫기" autoFocus>
+        <i className="fa-solid fa-xmark" />
+      </button>
+      {images.length > 1 && (
+        <>
+          <button type="button" className="pair-zoom-arrow prev" onClick={() => setI((v) => Math.max(0, v - 1))} disabled={i === 0} aria-label="이전 이미지">
+            <i className="fa-solid fa-chevron-left" />
+          </button>
+          <button type="button" className="pair-zoom-arrow next" onClick={() => setI((v) => Math.min(images.length - 1, v + 1))} disabled={i === images.length - 1} aria-label="다음 이미지">
+            <i className="fa-solid fa-chevron-right" />
+          </button>
+          <span className="pair-zoom-count">
+            {i + 1} / {images.length}
+          </span>
+        </>
+      )}
+    </div>,
+    document.body,
+  )
+}
+
 function WikiModal({ title, html, onClose }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -349,6 +453,13 @@ const CHAR_BASIC = [
   { key: 'subName', label: '이름 아래 작은 글', placeholder: '이도하' },
   { key: 'tagline', label: '이름 위 한 줄', placeholder: '밤에만 문을 여는 고서점 주인.' },
   { key: 'image', label: '전신 이미지', type: 'image', guide: 'fullBody', uploadOptions: { maxSize: 2000, keepPng: true } },
+  {
+    key: 'images',
+    label: '추가 이미지 (상세 화면에서 옆으로 넘겨 봐요)',
+    type: 'list',
+    itemLabel: '이미지',
+    itemFields: [{ key: 'image', label: '이미지', type: 'image', guide: 'fullBody', uploadOptions: { maxSize: 2000, keepPng: true } }],
+  },
   { key: 'zoom', label: '첫 화면 이미지 확대 (1이면 전신, 클수록 반신을 크게)', type: 'range', min: 1, max: 3, step: 0.05 },
   { key: 'focusY', label: '확대 기준 높이 (얼굴이 잘리면 줄이고, 너무 위가 비면 늘려요)', type: 'range', min: 0, max: 60, unit: '%' },
   { key: 'color', label: '대표 색 (키워드·테두리·스테이터스 막대)', type: 'color' },

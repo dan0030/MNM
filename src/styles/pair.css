@@ -662,3 +662,185 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 상세 이미지: 카드 폭은 줄이고 이미지는 크게, 여러 장은 옆으로 넘기기 */
+.pair-detail-grid {
+  grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.24fr);
+}
+/* 폭은 좁게, 세로로 길게 → 전신 이미지가 더 크게 보여요 */
+.pair-detail .pair-figure {
+  aspect-ratio: 1 / 2;
+  max-height: min(680px, calc(100vh - 140px));
+}
+.pair-detail .pair-figure .pair-panel-frame {
+  inset: 10px;
+}
+.pair-slides {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  outline: none;
+}
+.pair-slides::-webkit-scrollbar {
+  display: none;
+}
+.pair-slide {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+.pair-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.pair-zoom-btn,
+.pair-slide-arrow {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.pair-zoom-btn {
+  top: 12px;
+  right: 12px;
+}
+.pair-zoom-btn:hover {
+  transform: scale(1.06);
+}
+.pair-slide-arrow {
+  top: 50%;
+  margin-top: -18px;
+  opacity: 0;
+}
+.pair-slide-arrow.prev {
+  left: 10px;
+}
+.pair-slide-arrow.next {
+  right: 10px;
+}
+.pair-figure:hover .pair-slide-arrow:not(:disabled) {
+  opacity: 1;
+}
+.pair-slide-arrow:disabled {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+.pair-slide-dots {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.pair-slide-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 30%, transparent);
+  transition: width 0.25s var(--ease), background-color 0.25s;
+}
+.pair-slide-dots button.active {
+  width: 18px;
+  background: color-mix(in srgb, var(--pc) 80%, var(--text));
+}
+@media (hover: none) {
+  .pair-slide-arrow {
+    display: none;
+  }
+}
+
+/* 크게 보기 */
+.pair-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 10, 14, 0.88);
+  animation: wiki-fade 0.2s ease;
+}
+.pair-zoom img {
+  max-width: 94vw;
+  max-height: 92vh;
+  object-fit: contain;
+  user-select: none;
+}
+.pair-zoom-close,
+.pair-zoom-arrow {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.pair-zoom-close {
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+}
+.pair-zoom-arrow {
+  top: 50%;
+  margin-top: -22px;
+}
+.pair-zoom-arrow.prev {
+  left: 16px;
+}
+.pair-zoom-arrow.next {
+  right: 16px;
+}
+.pair-zoom-arrow:disabled {
+  opacity: 0.25;
+}
+.pair-zoom-count {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .pair-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pair-detail .pair-figure {
+    width: min(100%, 340px);
+    aspect-ratio: 3 / 5;
+    max-height: 70vh;
+    margin: 0 auto;
+  }
+}
