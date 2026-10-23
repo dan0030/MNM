@@ -637,3 +637,32 @@
   background: transparent;
   padding: 6px;
 }
+
+/* 상세 화면: 이미지 + 이름 영역 아래로 프로필·스테이터스 등을 넓게 */
+.pair-detail-grid {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  margin-bottom: 18px;
+}
+.pair-detail .pair-figure {
+  position: relative;
+  top: auto;
+  max-height: 520px;
+}
+.pair-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@media (max-width: 640px) {
+  .pair-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 페어 첫 화면: 큰 제목 위 빈 공간을 줄여요 */
+.pair-overview .large-title {
+  min-height: 0;
+  padding-top: 8px;
+  padding-bottom: 18px;
+}

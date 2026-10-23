@@ -233,6 +233,11 @@ function PairDetail({ config, idx, base }) {
           {ch.intro && <p className="pair-intro">{swapNames(ch.intro, site)}</p>}
 
 
+        </div>
+      </div>
+
+      {/* 프로필·스테이터스·소개·위키는 이미지 아래에 넓게 */}
+      <div className="pair-sections">
           {ch.profile?.some((p) => p.label || p.value) && (
             <div className="pair-card">
               <h2 className="pair-card-title">프로필</h2>
@@ -293,7 +298,6 @@ function PairDetail({ config, idx, base }) {
               <i className="fa-solid fa-chevron-right" />
             </button>
           )}
-        </div>
       </div>
 
       {wikiOpen && <WikiModal title={ch.wikiTitle || `${ch.name || ch.subName} 위키`} html={ch.wiki} onClose={() => setWikiOpen(false)} />}
