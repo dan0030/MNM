@@ -8,6 +8,7 @@ import { ImageInput } from '../components/Fields.jsx'
 import { Content } from '../components/Content.jsx'
 import { Empty, Segmented, Spinner, Switch } from '../components/ui.jsx'
 import { RichEditor } from '../editor/RichEditor.jsx'
+import { RpWriteFields } from './RpPage.jsx'
 
 function nowLocal() {
   const d = new Date()
@@ -211,6 +212,9 @@ export default function Write({ id }) {
                 ))}
               </select>
             </div>
+          )}
+          {post.type === 'post' && app.categories.find((c) => c.id === Number(post.categoryId))?.page_type === 'rp' && (
+            <RpWriteFields key={post.categoryId} categoryId={Number(post.categoryId)} extra={post.extra} setExtra={setExtra} />
           )}
 
           <div className="field">

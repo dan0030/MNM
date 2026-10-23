@@ -8,6 +8,7 @@ import { PostList } from '../components/PostList.jsx'
 import { Empty, Paging, Spinner } from '../components/ui.jsx'
 import { ThreadFeed } from '../components/Thread.jsx'
 import PairPage from './PairPage.jsx'
+import RpPage from './RpPage.jsx'
 import { perPageFor } from '../lib/defaults.js'
 
 
@@ -24,6 +25,7 @@ export default function Archive({ kind, param, search }) {
   const category = kind === 'category' ? app.categories.find((c) => c.slug === param) : null
   const isThread = category?.page_type === 'thread' && !date
   const isPair = category?.page_type === 'pair'
+  const isRp = category?.page_type === 'rp' && !date
   // 목록 모양은 관리자가 정한 것 하나로만 보여줘요. (카테고리 설정 > 디자인 › 목록 기본값)
   const style = kind === 'notice' ? app.theme.noticeStyle || 'list' : category?.list_style || app.theme.listStyle
   const perPage = perPageFor(app.site, app.theme, style)
@@ -37,7 +39,7 @@ export default function Archive({ kind, param, search }) {
       setData({ items: [], total: 0, page: 1, pages: 1 })
       return
     }
-    if (isThread || isPair) return
+    if (isThread || isPair || isRp) return
     let alive = true
     setData(null)
     setError(null)
@@ -54,7 +56,7 @@ export default function Archive({ kind, param, search }) {
     return () => {
       alive = false
     }
-  }, [kind, param, q, page, date, perPage, isThread, isPair])
+  }, [kind, param, q, page, date, perPage, isThread, isPair, isRp])
 
   let title = '전체 기록'
   let subtitle = data ? `${data.total}개의 글` : ''
@@ -68,9 +70,9 @@ export default function Archive({ kind, param, search }) {
   if (date) title = formatDate(date, date.length === 10 ? 'long' : 'dot')
 
   useEffect(() => {
-    if (isPair) return // 페어 페이지는 스스로 제목을 정해요
+    if (isPair || isRp) return // 페어·역극 페이지는 스스로 제목을 정해요
     document.title = `${title} :: ${app.site.title}`
-  }, [title, app.site.title, isPair])
+  }, [title, app.site.title, isPair, isRp])
 
   function goPage(n) {
     const next = new URLSearchParams(search)
@@ -82,6 +84,7 @@ export default function Archive({ kind, param, search }) {
   const subCats = category ? app.categories.filter((c) => c.parent_id === category.id) : []
 
   if (isPair) return <PairPage category={category} search={search} />
+  if (isRp) return <RpPage key={category.id} category={category} search={search} />
 
   return (
     <div className="archive">

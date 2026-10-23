@@ -8,5 +8,6 @@ import './styles/components.css'
 import './styles/widgets.css'
 import './styles/content.css'
 import './styles/pair.css'
+import './styles/rp.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />)

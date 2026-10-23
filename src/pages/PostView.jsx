@@ -8,6 +8,7 @@ import { Content } from '../components/Content.jsx'
 import { Comments } from '../components/Comments.jsx'
 import { Empty, Spinner } from '../components/ui.jsx'
 import { ThreadView } from '../components/Thread.jsx'
+import { RpPostInfo } from './RpPage.jsx'
 
 export default function PostView({ id }) {
   const app = useApp()
@@ -106,6 +107,7 @@ export default function PostView({ id }) {
             {post.title}
           </h1>
           {post.subtitle && <p className="article-subtitle">{post.subtitle}</p>}
+          {category?.page_type === 'rp' && !post.locked && <RpPostInfo post={post} category={category} />}
           <div className="article-meta">
             <span>{formatDate(post.publishedAt)}</span>
             {app.site.features.showViews && (

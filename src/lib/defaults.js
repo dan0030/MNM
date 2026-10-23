@@ -379,6 +379,7 @@ export const DEFAULT_HOME = {
 export const PAGE_TYPES = [
   { value: 'posts', label: '일반 게시판', icon: 'fa-regular fa-file-lines', desc: '제목이 있는 글을 목록(리스트·갤러리·메모 등)으로 보여줘요.' },
   { value: 'thread', label: '타임라인 타래', icon: 'fa-solid fa-diagram-next', desc: '트위터처럼 글 아래로 글을 계속 이어 다는 타래를 세워요.' },
+  { value: 'rp', label: '역극 로그', icon: 'fa-solid fa-masks-theater', desc: '장문 역극 로그를 카드로 정리해요. 본편·IF·AU 같은 세계선별로 나눠 보고, 이 페이지 안에서만 검색할 수 있어요.' },
   { value: 'pair', label: '캐릭터 페어', icon: 'fa-solid fa-user-group', desc: '두 사람의 전신 이미지·프로필·스테이터스·위키 문서를 정리하는 소개 페이지예요.' },
 ]
 

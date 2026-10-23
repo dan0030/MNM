@@ -6,7 +6,7 @@ const SESSION_COOKIE = 'od_session'
 const SESSION_DAYS = 30
 const SETTING_KEYS = ['site', 'theme', 'home']
 // 카테고리 페이지 종류: posts(일반 게시판) · thread(타임라인 타래). 새 종류는 여기에 추가해요.
-const PAGE_TYPES = ['posts', 'thread', 'pair']
+const PAGE_TYPES = ['posts', 'thread', 'pair', 'rp']
 const MAX_SETTING_BYTES = 512 * 1024
 const D1_FILE_LIMIT = 1_900_000
 const R2_FILE_LIMIT = 25 * 1024 * 1024
@@ -522,6 +522,11 @@ function shapeListItem(row, admin) {
     // 타임라인 보기에서 실제 날짜 대신 보여줄 세계관 날짜 (비우면 실제 날짜)
     tlGroup: extra.tlGroup || '',
     tlLabel: extra.tlLabel || '',
+    // 역극 로그 페이지용 정보
+    rpWorld: extra.rpWorld || '',
+    rpDesc: locked ? '' : extra.rpDesc || '',
+    rpPeriod: extra.rpPeriod || '',
+    rpStatus: extra.rpStatus || '',
     commentCount: row.comment_count || 0,
     replyCount: row.reply_count || 0,
     author: extra.author || 'me',
@@ -567,10 +572,19 @@ async function listPosts(db, admin, params) {
     where.push('EXISTS (SELECT 1 FROM json_each(p.tags) WHERE json_each.value = ?)')
     binds.push(tag)
   }
+  // 역극 로그: 세계선(본편·IF·AU 등)으로 나눠 보기 — 이 조건을 빼고 세계선별 개수도 세요
+  const whereNoWorld = [...where]
+  const bindsNoWorld = [...binds]
+  const world = params.get('world')
+  if (world) {
+    where.push("COALESCE(json_extract(p.extra, '$.rpWorld'), '') = ?")
+    binds.push(world)
+  }
   const q = (params.get('q') || '').trim()
   if (q) {
-    where.push(`(p.title LIKE ? OR (${admin ? '1' : "p.visibility = 'public'"} AND p.plain LIKE ?))`)
-    binds.push(`%${q}%`, `%${q}%`)
+    const vis = admin ? '1' : "p.visibility = 'public'"
+    where.push(`(p.title LIKE ? OR p.tags LIKE ? OR (${vis} AND (p.plain LIKE ? OR json_extract(p.extra, '$.rpDesc') LIKE ?)))`)
+    binds.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`)
   }
   const date = params.get('date')
   if (date && /^\d{4}-\d{2}(-\d{2})?$/.test(date)) {
@@ -615,8 +629,36 @@ async function listPosts(db, admin, params) {
     }
   }
   if (ids) items.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id))
+  // 검색어가 본문 어디에 나오는지 앞뒤 문장을 조금 보여줘요.
+  if (q && params.get('snippet') === '1' && items.length) {
+    const open = items.filter((it) => !it.locked).map((it) => it.id)
+    if (open.length) {
+      const { results } = await db.prepare(`SELECT id, plain FROM posts WHERE id IN (${open.map(() => '?').join(',')})`).bind(...open).all()
+      const lower = q.toLowerCase()
+      const byId = new Map(
+        results.map((r) => {
+          const text = String(r.plain || '').replace(/\s+/g, ' ')
+          const at = text.toLowerCase().indexOf(lower)
+          if (at < 0) return [r.id, '']
+          const start = Math.max(0, at - 50)
+          const end = Math.min(text.length, at + q.length + 70)
+          return [r.id, `${start > 0 ? '…' : ''}${text.slice(start, end)}${end < text.length ? '…' : ''}`]
+        }),
+      )
+      items = items.map((it) => (byId.get(it.id) ? { ...it, snippet: byId.get(it.id) } : it))
+    }
+  }
   const total = count?.n || 0
-  return { items, total, page, pages: Math.max(1, Math.ceil(total / limit)) }
+  const result = { items, total, page, pages: Math.max(1, Math.ceil(total / limit)) }
+  if (params.get('worldCounts') === '1') {
+    const sql = whereNoWorld.length ? `WHERE ${whereNoWorld.join(' AND ')}` : ''
+    const { results } = await db
+      .prepare(`SELECT COALESCE(json_extract(p.extra, '$.rpWorld'), '') AS w, COUNT(*) AS n FROM posts p ${sql} GROUP BY w`)
+      .bind(...bindsNoWorld)
+      .all()
+    result.worldCounts = Object.fromEntries(results.map((r) => [r.w, r.n]))
+  }
+  return result
 }
 
 async function getPost(db, id, admin, unlocked) {
