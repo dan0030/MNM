@@ -1300,3 +1300,12 @@ html.inner-scroll.home-fixed #root {
     display: none;
   }
 }
+
+/* 큰 제목: 위쪽 여백을 정해진 값(디자인 › 배치 › 큰 제목 위 여백)으로 맞춰서
+   아이콘·소개 글이 있든 없든 모든 페이지에서 제목이 같은 높이에서 시작해요. (홈 제목은 따로) */
+:root:not([data-header='compact']) .large-title:not(.home-title),
+:root:not([data-header='compact']) .browser-body .large-title:not(.home-title) {
+  min-height: 0;
+  align-items: flex-start;
+  padding-top: var(--title-top, 72px);
+}

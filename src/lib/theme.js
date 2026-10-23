@@ -151,6 +151,7 @@ export function applyTheme(theme, mode) {
     '--gap': `${theme.gap}px`,
     '--content-width': `${theme.contentWidth}px`,
     '--expanded-height': `${theme.expandedHeight}vh`,
+    '--title-top': `${Number(theme.titleTop ?? 72)}px`,
     '--gallery-cols': theme.galleryColumns,
     '--topbar-bg':
       theme.topbarStyle === 'transparent'

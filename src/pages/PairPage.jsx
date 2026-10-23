@@ -97,7 +97,7 @@ export default function PairPage({ category, search }) {
   return (
     <div className="pair-page">
       {idx === null ? (
-        <PairOverview config={config} base={base} empty={empty} admin={app.admin} />
+        <PairOverview config={config} base={base} empty={empty} admin={app.admin} category={category} />
       ) : (
         <PairDetail key={idx} config={config} idx={idx} base={base} />
       )}
@@ -126,7 +126,7 @@ export default function PairPage({ category, search }) {
 
 /* ---------------- 첫 화면 ---------------- */
 
-function PairOverview({ config, base, empty, admin }) {
+function PairOverview({ config, base, empty, admin, category }) {
   const { site } = useApp()
   const nameGroup = useFitGroup()
   const [worldOpen, setWorldOpen] = useState(false)
@@ -134,7 +134,7 @@ function PairOverview({ config, base, empty, admin }) {
 
   return (
     <section className="pair-overview">
-      <LargeTitle title={config.title ? swapNames(config.title, site) : '페어'} subtitle={config.subtitle ? swapNames(config.subtitle, site) : ''} />
+      <LargeTitle title={config.title ? swapNames(config.title, site) : category.name} subtitle={config.subtitle ? swapNames(config.subtitle, site) : ''} eyebrow={category.icon ? <i className={category.icon} /> : null} />
 
       <div className="pair-cards">
         {config.chars.map((ch, i) => (
